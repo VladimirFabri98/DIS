@@ -1,0 +1,5 @@
+rootProject.name = 'conversion-project'
+include ':microservices:currencyConversion-service'
+include ':microservices:currencyExchange-service'
+include ':microservices:bankAccount-service'
+include ':microservices:currencyConversionComposite-service'
