@@ -1,22 +1,20 @@
-package vladimir.microservices.core.cConversion.pojo;
+package vladimir.api.core.conversion;
 
-import vladimir.microservices.core.cExchange.pojo.CurrencyExchange;
+import vladimir.api.core.exchange.CurrencyExchange;
 
 public class CurrencyConversion {
 
 	private int conversionId;
 	private CurrencyExchange exchangeRate;
 	private double quantity;
-	
-	public CurrencyConversion() {
-		
-	}
+	private final String serviceAdress;
 
-	public CurrencyConversion(int conversionId, CurrencyExchange exchangeRate, double quantity) {
+	public CurrencyConversion(int conversionId, CurrencyExchange exchangeRate, double quantity, String serviceAdress) {
 		super();
 		this.conversionId = conversionId;
 		this.exchangeRate = exchangeRate;
 		this.quantity = quantity;
+		this.serviceAdress = serviceAdress;
 	}
 
 	public int getConversionId() {
@@ -41,6 +39,10 @@ public class CurrencyConversion {
 
 	public void setQuantity(double quantity) {
 		this.quantity = quantity;
+	}
+
+	public String getServiceAdress() {
+		return serviceAdress;
 	}
 	
 	

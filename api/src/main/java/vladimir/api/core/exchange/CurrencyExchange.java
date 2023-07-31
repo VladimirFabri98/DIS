@@ -1,4 +1,4 @@
-package vladimir.microservices.core.cExchange.pojo;
+package vladimir.api.core.exchange;
 
 public class CurrencyExchange {
 
@@ -6,17 +6,20 @@ public class CurrencyExchange {
 	private String currency_from;
 	private String currency_to;
 	private double exchangeRate;
+	private String serviceAddress;
 
 	public CurrencyExchange() {
 		
 	}
 	
-	public CurrencyExchange(int exchangeId, String currency_from, String currency_to, double exchangeRate) {
+	public CurrencyExchange(int exchangeId, String currency_from, String currency_to, double exchangeRate,String serviceAdress) {
 		super();
 		this.exchangeId = exchangeId;
 		this.currency_from = currency_from;
 		this.currency_to = currency_to;
 		this.exchangeRate = exchangeRate;
+		this.serviceAddress = serviceAdress;
+		
 	}
 
 	public int getExchangeId() {
@@ -49,6 +52,14 @@ public class CurrencyExchange {
 
 	public void setExchangeRate(double exchangeRate) {
 		this.exchangeRate = exchangeRate;
+	}
+
+	public String getServiceAddress() {
+		return serviceAddress;
+	}
+
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }

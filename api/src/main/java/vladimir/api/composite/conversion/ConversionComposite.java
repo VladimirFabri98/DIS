@@ -1,7 +1,7 @@
-package vladimir.microservices.core.cConversionComposite.pojo;
+package vladimir.api.composite.conversion;
 
-import vladimir.microservices.core.bankAccount.pojo.BankAccount;
-import vladimir.microservices.core.cConversion.pojo.CurrencyConversion;
+import vladimir.api.core.bankAccount.BankAccount;
+import vladimir.api.core.conversion.CurrencyConversion;
 
 public class ConversionComposite {
 

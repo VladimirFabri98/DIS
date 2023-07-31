@@ -1,4 +1,4 @@
-package vladimir.microservices.core.bankAccount.pojo;
+package vladimir.api.core.bankAccount;
 
 import java.util.HashMap;
 
@@ -6,15 +6,13 @@ public class BankAccount {
 
 	private int accountId;
 	private HashMap<String, Double> currencies;
-
-	public BankAccount() {
-		
-	}
+	private final String serviceAdress;
 	
-	public BankAccount(int accountId, HashMap<String, Double> currencies) {
+	public BankAccount(int accountId, HashMap<String, Double> currencies,String serviceAdress) {
 		super();
 		this.accountId = accountId;
 		this.currencies = currencies;
+		this.serviceAdress = serviceAdress;
 	}
 
 	public int getAccountId() {
@@ -33,4 +31,9 @@ public class BankAccount {
 		this.currencies = currencies;
 	}
 
+	public String getServiceAdress() {
+		return serviceAdress;
+	}
+
+	
 }
