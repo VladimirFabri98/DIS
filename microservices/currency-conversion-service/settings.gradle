@@ -1,1 +1,3 @@
 rootProject.name = 'currency-conversion-service'
+include ":currency-exchange-service"
+project(":currency-exchange-service").projectDir = file("../currency-exchange-service")
