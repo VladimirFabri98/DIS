@@ -30,6 +30,11 @@ public class DlcServiceImpl implements DlcService {
 		LOG.debug("/DLC return the found dlc for gameId={}", gameId);
         if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
         
+        if (gameId == 200) {
+            LOG.debug("No dlcs found for gameId: {}", gameId);
+            return  new ArrayList<>();
+        }
+        
         List<Dlc> list = new ArrayList<>();
         list.add(new Dlc(1,gameId,"Chaos warriors",9,serviceUtil.getServiceAddress()));
         list.add(new Dlc(2,gameId,"The Warden & the Paunch",10,serviceUtil.getServiceAddress()));

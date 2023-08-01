@@ -43,6 +43,11 @@ public class EventServiceImpl implements EventService {
 		LOG.debug("/Event return the found event for gameId={}", gameId);
         if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
         
+        if (gameId == 200) {
+            LOG.debug("No events found for gameId: {}", gameId);
+            return  new ArrayList<>();
+        }
+        
         List<Event> list = new ArrayList<>();
         list.add(new Event(1, gameId, "Conference", "Blizzcon", new Date(date), serviceUtil.getServiceAddress()));
         list.add(new Event(1, gameId, "Conference", "Twitchcon", new Date(date), serviceUtil.getServiceAddress()));

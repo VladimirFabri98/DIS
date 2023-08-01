@@ -1,5 +1,7 @@
 package vladimir.microservices.composite.game.services;
 
+import java.io.IOException;
+import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
@@ -9,6 +11,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.client.RestTemplate;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -21,6 +24,9 @@ import vladimir.api.core.game.Game;
 import vladimir.api.core.game.GameService;
 import vladimir.api.core.review.Review;
 import vladimir.api.core.review.ReviewService;
+import vladimir.util.exceptions.InvalidInputException;
+import vladimir.util.exceptions.NotFoundException;
+import vladimir.util.http.HttpErrorInfo;
 
 @Component
 public class GameCompositeIntegration implements GameService, ReviewService, DlcService, EventService {
@@ -61,35 +67,91 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 
 	@Override
 	public Game getGame(int gameId) {
-		String url = gameServiceUrl + gameId;
-		Game game = restTemplate.getForObject(url, Game.class);
-		return game;
+		try {
+			String url = gameServiceUrl + gameId;
+			LOG.debug("Will call getGame API on URL: {}", url);
+			Game game = restTemplate.getForObject(url, Game.class);
+			LOG.debug("Found a game with id: {}", game.getGameId());
+
+			return game;
+
+		} catch (HttpClientErrorException ex) {
+			switch (ex.getStatusCode()) {
+
+			case NOT_FOUND:
+				throw new NotFoundException(getErrorMessage(ex));
+
+			case UNPROCESSABLE_ENTITY:
+				throw new InvalidInputException(getErrorMessage(ex));
+
+			default:
+				LOG.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
+				LOG.warn("Error body: {}", ex.getResponseBodyAsString());
+				throw ex;
+			}
+		}
+	}
+
+	private String getErrorMessage(HttpClientErrorException ex) {
+		try {
+			return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
+		} catch (IOException ioex) {
+			return ex.getMessage();
+		}
 	}
 
 	@Override
 	public List<Review> getReviews(int gameId) {
-		String url = reviewServiceUrl + gameId;
-		List<Review> reviews = restTemplate
-				.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {
-				}).getBody();
-		return reviews;
+		try {
+			String url = reviewServiceUrl + gameId;
+			LOG.debug("Will call getReviews API on URL: {}", url);
+			List<Review> reviews = restTemplate
+					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {
+					}).getBody();
+			LOG.debug("Found {} reviews for a game with id: {}", reviews.size(), gameId);
+			
+			return reviews;
+			
+		} catch (Exception ex) {
+			LOG.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
+			return new ArrayList<>();
+		}
+
 	}
 
 	@Override
 	public List<Dlc> getDlcs(int gameId) {
-		String url = dlcServiceUrl + gameId;
-		List<Dlc> dlcs = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Dlc>>() {
-		}).getBody();
-		return dlcs;
+		try {
+			String url = dlcServiceUrl + gameId;
+			LOG.debug("Will call getDlcs API on URL: {}", url);
+			List<Dlc> dlcs = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Dlc>>() {
+			}).getBody();
+			LOG.debug("Found {} dlcs for a game with id: {}", dlcs.size(), gameId);
+			
+			return dlcs;
+		} catch (Exception ex) {
+			LOG.warn("Got an exception while requesting dlcs, return zero dlcs: {}", ex.getMessage());
+			return new ArrayList<>();
+		}
+		
 	}
 
 	@Override
 	public List<Event> getEvents(int gameId) {
-		String url = eventServiceUrl + gameId;
-		List<Event> events = restTemplate
-				.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Event>>() {
-				}).getBody();
-		return events;
+		try {
+			String url = eventServiceUrl + gameId;
+			LOG.debug("Will call getEvents API on URL: {}", url);
+			List<Event> events = restTemplate
+					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Event>>() {
+					}).getBody();
+			LOG.debug("Found {} events for a game with id: {}", events.size(), gameId);
+			
+			return events;
+		} catch (Exception ex) {
+			LOG.warn("Got an exception while requesting events, return zero events: {}", ex.getMessage());
+			return new ArrayList<>();
+		}
+		
 	}
 
 }

@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RestController;
 import vladimir.api.core.game.Game;
 import vladimir.api.core.game.GameService;
 import vladimir.util.exceptions.InvalidInputException;
+import vladimir.util.exceptions.NotFoundException;
 import vladimir.util.http.ServiceUtil;
 
 @RestController
@@ -26,6 +27,8 @@ public class GameServiceImpl implements GameService {
 		LOG.debug("/Game return the found game for gameId={}", gameId);
 
         if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
+        
+        if(gameId == 50) throw new NotFoundException("No game found for gameId: " + gameId);
 		
 		return new Game(gameId,"World of Warcraft","Blizzard",2007,serviceUtil.getServiceAddress());
 	}
