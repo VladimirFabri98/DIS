@@ -1,5 +1,0 @@
-rootProject.name = 'ccComposite-service'
-include ":currency-conversion-service"
-project(":currency-conversion-service").projectDir = file("../currency-conversion-service")
-include ":bank-account-service"
-project(":bank-account-service").projectDir = file("../bank-account-service")

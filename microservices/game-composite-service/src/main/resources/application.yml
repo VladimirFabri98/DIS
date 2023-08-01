@@ -1,0 +1,7 @@
+server.port: 7005
+server.error.include-message: always
+
+logging:
+  level:
+    root: INFO
+    vladimir: DEBUG
