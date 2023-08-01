@@ -5,14 +5,21 @@ public class Review {
 	private int reviewId;
 	private int gameId;
 	private double rating;
-	private final String serviceAdress;
+	private final String serviceAddress;
 
-	public Review(int reviewId, int gameId, double rating, String serviceAdress) {
+	public Review() {
+		this.reviewId = 0;
+		this.gameId = 0;
+		this.rating = 0;
+		this.serviceAddress = null;
+	}
+	
+	public Review(int reviewId, int gameId, double rating, String serviceAddress) {
 		super();
 		this.reviewId = reviewId;
 		this.gameId = gameId;
 		this.rating = rating;
-		this.serviceAdress = serviceAdress;
+		this.serviceAddress = serviceAddress;
 	}
 
 	public int getReviewId() {
@@ -39,8 +46,8 @@ public class Review {
 		this.rating = rating;
 	}
 
-	public String getServiceAdress() {
-		return serviceAdress;
+	public String getServiceAddress() {
+		return serviceAddress;
 	}
 
 }

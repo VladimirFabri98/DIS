@@ -6,15 +6,23 @@ public class Dlc {
 	private int gameId;
 	private String name;
 	private double price;
-	private final String serviceAdress;
+	private final String serviceAddress;
 
-	public Dlc(int dlcId, int gameId, String name, double price, String serviceAdress) {
+	public Dlc() {
+		this.dlcId = 0;
+		this.gameId = 0;
+		this.name = null;
+		this.price = 0;
+		this.serviceAddress = null;
+	}
+	
+	public Dlc(int dlcId, int gameId, String name, double price, String serviceAddress) {
 		super();
 		this.dlcId = dlcId;
 		this.gameId = gameId;
 		this.name = name;
 		this.price = price;
-		this.serviceAdress = serviceAdress;
+		this.serviceAddress = serviceAddress;
 	}
 
 	public int getDlcId() {
@@ -49,8 +57,8 @@ public class Dlc {
 		this.price = price;
 	}
 
-	public String getServiceAdress() {
-		return serviceAdress;
+	public String getServiceAddress() {
+		return serviceAddress;
 	}
 
 }

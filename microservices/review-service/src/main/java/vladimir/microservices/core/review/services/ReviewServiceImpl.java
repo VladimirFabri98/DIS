@@ -1,5 +1,8 @@
 package vladimir.microservices.core.review.services;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,13 +23,19 @@ public class ReviewServiceImpl implements ReviewService{
 	public ReviewServiceImpl(ServiceUtil serviceUtil) {
 		this.serviceUtil = serviceUtil;
 	}
-	
-	@Override
-	public Review getReview(int reviewId) {
-		LOG.debug("/Review return the found review for reviewId={}", reviewId);
 
-        if (reviewId < 1) throw new InvalidInputException("Invalid reviewId: " + reviewId);
-		
-		return new Review(reviewId, reviewId, 4, serviceUtil.getServiceAddress());
+	@Override
+	public List<Review> getReviews(int gameId) {
+		LOG.debug("/Review return the found review for gameId={}", gameId);
+        if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
+        
+        List<Review> list = new ArrayList<>();
+        list.add(new Review(1, gameId, 4, serviceUtil.getServiceAddress()));
+        list.add(new Review(2, gameId, 5, serviceUtil.getServiceAddress()));
+        list.add(new Review(3, gameId, 3, serviceUtil.getServiceAddress()));
+        
+        LOG.debug("/review response size: {}", list.size());
+        
+        return list;
 	}
 }

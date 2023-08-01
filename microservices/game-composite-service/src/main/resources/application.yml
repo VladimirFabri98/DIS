@@ -1,5 +1,19 @@
-server.port: 7005
+server.port: 7000
 server.error.include-message: always
+
+app:
+  game-service:
+    host: localhost
+    port: 7001
+  review-service:
+    host: localhost
+    port: 7002
+  dlc-service:
+    host: localhost
+    port: 7003
+  event-service:
+    host: localhost
+    port: 7004
 
 logging:
   level:

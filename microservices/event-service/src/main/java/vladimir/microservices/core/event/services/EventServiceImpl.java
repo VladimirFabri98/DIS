@@ -3,6 +3,8 @@ package vladimir.microservices.core.event.services;
 import java.sql.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,17 +31,24 @@ public class EventServiceImpl implements EventService {
 		this.serviceUtil = serviceUtil;
 	}
 	
+	
 	@Override
-	public Event getEvent(int eventId) {
+	public List<Event> getEvents(int gameId) {
 		try {
 			date = sdf.parse("25-11-2005").getTime();
 		} catch (ParseException e) {
 			LOG.debug("Invalid date");
 		}
-		LOG.debug("/Event return the found event for eventId={}", eventId);
-
-        if (eventId < 1) throw new InvalidInputException("Invalid event: " + eventId);
 		
-		return new Event(eventId, eventId, "Conference", "Blizzcon", new Date(date), serviceUtil.getServiceAddress());
+		LOG.debug("/Event return the found event for gameId={}", gameId);
+        if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
+        
+        List<Event> list = new ArrayList<>();
+        list.add(new Event(1, gameId, "Conference", "Blizzcon", new Date(date), serviceUtil.getServiceAddress()));
+        list.add(new Event(1, gameId, "Conference", "Twitchcon", new Date(date), serviceUtil.getServiceAddress()));
+        
+        LOG.debug("/review response size: {}", list.size());
+        
+        return list;
 	}
 }

@@ -6,18 +6,19 @@ import vladimir.api.core.dlc.Dlc;
 import vladimir.api.core.event.Event;
 import vladimir.api.core.review.Review;
 
-public class GameComposite {
+public class GameAggregate {
 
 	private final int gameId;
 	private final String name;
 	private final String producer;
 	private final int publishYear;
-	private final List<Review> reviews;
-	private final List<Dlc> dlcs;
-	private final List<Event> events;
+	private final List<ReviewSummary> reviews;
+	private final List<DlcSummary> dlcs;
+	private final List<EventSummary> events;
+	private final ServiceAddresses serviceAddresses;
 
-	public GameComposite(int gameId, String name, String producer, int publishYear, List<Review> reviews,
-			List<Dlc> dlcs, List<Event> events) {
+	public GameAggregate(int gameId, String name, String producer, int publishYear, List<ReviewSummary> reviews,
+			List<DlcSummary> dlcs, List<EventSummary> events, ServiceAddresses serviceAddresses) {
 		super();
 		this.gameId = gameId;
 		this.name = name;
@@ -26,6 +27,7 @@ public class GameComposite {
 		this.reviews = reviews;
 		this.dlcs = dlcs;
 		this.events = events;
+		this.serviceAddresses = serviceAddresses;
 	}
 
 	public int getGameId() {
@@ -44,16 +46,20 @@ public class GameComposite {
 		return publishYear;
 	}
 
-	public List<Review> getReviews() {
+	public List<ReviewSummary> getReviews() {
 		return reviews;
 	}
 
-	public List<Dlc> getDlcs() {
+	public List<DlcSummary> getDlcs() {
 		return dlcs;
 	}
 
-	public List<Event> getEvents() {
+	public List<EventSummary> getEvents() {
 		return events;
+	}
+
+	public ServiceAddresses getServiceAddresses() {
+		return serviceAddresses;
 	}
 
 }

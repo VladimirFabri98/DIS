@@ -1,0 +1,42 @@
+{"properties": [
+  {
+    "name": "app.game-service.host",
+    "type": "java.lang.String",
+    "description": "A description for 'app.game-service.host'"
+  },
+  {
+    "name": "app.game-service.port",
+    "type": "java.lang.String",
+    "description": "A description for 'app.game-service.port'"
+  },
+  {
+    "name": "app.review-service.host",
+    "type": "java.lang.String",
+    "description": "A description for 'app.review-service.host'"
+  },
+  {
+    "name": "app.review-service.port",
+    "type": "java.lang.String",
+    "description": "A description for 'app.review-service.port'"
+  },
+  {
+    "name": "app.dlc-service.host",
+    "type": "java.lang.String",
+    "description": "A description for 'app.dlc-service.host'"
+  },
+  {
+    "name": "app.dlc-service.port",
+    "type": "java.lang.String",
+    "description": "A description for 'app.dlc-service.port'"
+  },
+  {
+    "name": "app.event-service.host",
+    "type": "java.lang.String",
+    "description": "A description for 'app.event-service.host'"
+  },
+  {
+    "name": "app.event-service.port",
+    "type": "java.lang.String",
+    "description": "A description for 'app.event-service.port'"
+  }
+]}
