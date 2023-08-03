@@ -38,5 +38,60 @@
     "name": "app.event-service.port",
     "type": "java.lang.String",
     "description": "A description for 'app.event-service.port'"
+  },
+  {
+    "name": "api.common.version",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.version'"
+  },
+  {
+    "name": "api.common.title",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.title'"
+  },
+  {
+    "name": "api.common.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.description'"
+  },
+  {
+    "name": "api.common.termsOfServiceUrl",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.termsOfServiceUrl'"
+  },
+  {
+    "name": "api.common.license",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.license'"
+  },
+  {
+    "name": "api.common.licenseUrl",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.licenseUrl'"
+  },
+  {
+    "name": "api.common.contact.name",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.contact.name'"
+  },
+  {
+    "name": "api.common.contact.url",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.contact.url'"
+  },
+  {
+    "name": "api.common.contact.email",
+    "type": "java.lang.String",
+    "description": "A description for 'api.common.contact.email'"
+  },
+  {
+    "name": "api.game-composite.get-composite-game.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.get-composite-game.description'"
+  },
+  {
+    "name": "api.game-composite.get-composite-game.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.get-composite-game.notes'"
   }
 ]}

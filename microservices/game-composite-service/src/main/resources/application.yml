@@ -1,3 +1,46 @@
+api:
+
+  common:
+    version: 1.0.0
+    title: Sample API
+    description: Description of the API...
+    termsOfServiceUrl: MINE TERMS OF SERVICE URL
+    license: License
+    licenseUrl: MY LICENSE URL
+
+    contact:
+      name: Vladimir Fabri
+      url: https://github.com/VladimirFabri98
+      email: vfficial98@gmail.com
+
+  game-composite:
+
+    get-composite-game:
+      description: Returns a composite view of the specified game id
+      notes: |
+        # Normal response
+        If the requested game id is found the method will return information regarding:
+        1. Base game information
+        2. Reviews
+        3. Downloadable contents (DLCs)
+        4. Events
+        5. Service Addresses\n(technical information regarding the addresses of the microservices that created the response)
+
+        # Expected partial and error responses
+        In the following cases, only a partial response be created (used to simplify testing of error conditions)
+
+        ## Game id 200
+        200 - Ok, but no reviews,dlcs and events will be returned
+
+        ## Non numerical game id
+        400 - A <b>Bad Request</b> error will be returned
+
+        ## Game id 50
+        404 - A <b>Not Found</b> error will be returned
+
+        ## Negative game ids
+        422 - An <b>Unprocessable Entity</b> error will be returned
+
 server.port: 7000
 server.error.include-message: always
 
