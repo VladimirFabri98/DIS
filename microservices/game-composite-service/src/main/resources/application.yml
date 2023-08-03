@@ -19,3 +19,24 @@ logging:
   level:
     root: INFO
     vladimir: DEBUG
+
+---
+spring:
+  config:
+    activate:
+      on-profile: docker
+server.port: 8081
+
+app:
+  game-service:
+    host: game
+    port: 8081
+  dlc-service:
+    host: dlc
+    port: 8081
+  review-service:
+    host: review
+    port: 8081
+  event-service:
+    host: event
+    port: 8081

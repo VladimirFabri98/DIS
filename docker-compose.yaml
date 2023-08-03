@@ -1,0 +1,34 @@
+version: '2.1'
+
+services:
+  game:
+    build: microservices/game-service
+    mem_limit: 350m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  dlc:
+    build: microservices/dlc-service
+    mem_limit: 350m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  review:
+    build: microservices/review-service
+    mem_limit: 350m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      
+  event:
+    build: microservices/event-service
+    mem_limit: 350m
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+
+  game-composite:
+    build: microservices/game-composite-service
+    mem_limit: 350m
+    ports:
+      - "8081:8081"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
