@@ -6,6 +6,14 @@ logging:
     root: INFO
     vladimir: DEBUG
 
+spring:
+  mongodb:
+    embedded:
+      version: 3.5.5
+      
+  data:
+    mongodb:
+      auto-index-creation: true
 ---
 spring:
   config:

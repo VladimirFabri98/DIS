@@ -4,8 +4,7 @@ server.error.include-message: always
 logging:
   level:
     root: INFO
-    vladimir: DEBUG
-    
+    vladimir: DEBUG 
 ---
 spring:
   config:
