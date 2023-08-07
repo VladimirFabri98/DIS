@@ -93,5 +93,25 @@
     "name": "api.game-composite.get-composite-game.notes",
     "type": "java.lang.String",
     "description": "A description for 'api.game-composite.get-composite-game.notes'"
+  },
+  {
+    "name": "api.game-composite.create-composite-game.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.create-composite-game.description'"
+  },
+  {
+    "name": "api.game-composite.create-composite-game.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.create-composite-game.notes'"
+  },
+  {
+    "name": "api.game-composite.delete-composite-game.description",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.delete-composite-game.description'"
+  },
+  {
+    "name": "api.game-composite.delete-composite-game.notes",
+    "type": "java.lang.String",
+    "description": "A description for 'api.game-composite.delete-composite-game.notes'"
   }
 ]}

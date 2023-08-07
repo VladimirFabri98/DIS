@@ -3,6 +3,8 @@ package vladimir.microservices.composite.game.services;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -21,6 +23,7 @@ import vladimir.util.http.ServiceUtil;
 @RestController
 public class GameCompositeServiceImpl implements GameCompositeService {
 
+	private final Logger LOG = LoggerFactory.getLogger(GameCompositeServiceImpl.class);
 	private final ServiceUtil serviceUtil;
 	private final GameCompositeIntegration integration;
 
@@ -31,7 +34,7 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 	}
 
 	@Override
-	public GameAggregate getAggregate(int gameCompositeId) {
+	public GameAggregate getCompositeGame(int gameCompositeId) {
 		Game game = integration.getGame(gameCompositeId);
 		List<Review> reviews = integration.getReviews(gameCompositeId);
 		List<Dlc> dlcs = integration.getDlcs(gameCompositeId);
@@ -76,6 +79,40 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 		return new GameAggregate(gameId, name, producer, releaseYear, reviewSummaries, dlcSummaries, eventSummaries,
 				serviceAddresses);
 
+	}
+
+	@Override
+	public void createCompositeGame(GameAggregate body) {
+		try {
+			integration.createGame(new Game
+					(body.getGameId(),body.getName(),body.getProducer(),body.getPublishYear(),null));
+			if(body.getReviews() != null) {
+				body.getReviews().forEach(r -> {
+					integration.createReview(new Review(r.getReviewId(),body.getGameId(),r.getRating(),body.getServiceAddresses().getRev()));
+				});
+			}
+			if(body.getDlcs() != null) {
+				body.getDlcs().forEach(d -> {
+					integration.createDlc(new Dlc(d.getDlcId(),body.getGameId(),d.getName(),d.getPrice(),null));
+				});
+			}
+			if(body.getEvents() != null) {
+				body.getEvents().forEach(e -> {
+					integration.createEvent(new Event(e.getEventId(),body.getGameId(),e.getType(),e.getName(),e.getDateOfStart(),null));
+				});
+			}
+		} catch (RuntimeException e) {
+			LOG.warn("createCompositeGame failed", e);
+			throw e;
+		}
+	}
+
+	@Override
+	public void deleteCompositeGame(int gameId) {
+		integration.deleteGame(gameId);
+		integration.deleteReviews(gameId);
+		integration.deleteDlcs(gameId);
+		integration.deleteEvents(gameId);
 	}
 
 }

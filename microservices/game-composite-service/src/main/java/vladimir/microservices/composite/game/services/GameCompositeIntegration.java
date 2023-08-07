@@ -58,17 +58,17 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		this.restTemplate = restTemplate;
 		this.mapper = mapper;
 
-		gameServiceUrl = "http://" + gameServiceHost + ":" + gameServicePort + "/game/";
-		dlcServiceUrl = "http://" + dlcServiceHost + ":" + dlcServicePort + "/dlc/";
-		reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review/";
-		eventServiceUrl = "http://" + eventServiceHost + ":" + eventServicePort + "/event/";
+		gameServiceUrl = "http://" + gameServiceHost + ":" + gameServicePort + "/game";
+		dlcServiceUrl = "http://" + dlcServiceHost + ":" + dlcServicePort + "/dlc";
+		reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
+		eventServiceUrl = "http://" + eventServiceHost + ":" + eventServicePort + "/event";
 
 	}
 
 	@Override
 	public Game getGame(int gameId) {
 		try {
-			String url = gameServiceUrl + gameId;
+			String url = gameServiceUrl + "/" + gameId;
 			LOG.debug("Will call getGame API on URL: {}", url);
 			Game game = restTemplate.getForObject(url, Game.class);
 			LOG.debug("Found a game with id: {}", game.getGameId());
@@ -76,34 +76,15 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 			return game;
 
 		} catch (HttpClientErrorException ex) {
-			switch (ex.getStatusCode()) {
-
-			case NOT_FOUND:
-				throw new NotFoundException(getErrorMessage(ex));
-
-			case UNPROCESSABLE_ENTITY:
-				throw new InvalidInputException(getErrorMessage(ex));
-
-			default:
-				LOG.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
-				LOG.warn("Error body: {}", ex.getResponseBodyAsString());
-				throw ex;
-			}
+			throw handleHttpClientException(ex);
 		}
 	}
 
-	private String getErrorMessage(HttpClientErrorException ex) {
-		try {
-			return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
-		} catch (IOException ioex) {
-			return ex.getMessage();
-		}
-	}
 
 	@Override
 	public List<Review> getReviews(int gameId) {
 		try {
-			String url = reviewServiceUrl + gameId;
+			String url = reviewServiceUrl + "/" + gameId;
 			LOG.debug("Will call getReviews API on URL: {}", url);
 			List<Review> reviews = restTemplate
 					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {
@@ -122,7 +103,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	@Override
 	public List<Dlc> getDlcs(int gameId) {
 		try {
-			String url = dlcServiceUrl + gameId;
+			String url = dlcServiceUrl + "/" + gameId;
 			LOG.debug("Will call getDlcs API on URL: {}", url);
 			List<Dlc> dlcs = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Dlc>>() {
 			}).getBody();
@@ -139,7 +120,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	@Override
 	public List<Event> getEvents(int gameId) {
 		try {
-			String url = eventServiceUrl + gameId;
+			String url = eventServiceUrl + "/" + gameId;
 			LOG.debug("Will call getEvents API on URL: {}", url);
 			List<Event> events = restTemplate
 					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Event>>() {
@@ -153,53 +134,110 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		}
 		
 	}
-
+	
+	@Override
+	public Game createGame(Game body) {
+		try {
+			return restTemplate.postForObject(gameServiceUrl + "-post", body, Game.class);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+	}
+	
+	@Override
+	public Review createReview(Review body) {
+		try {
+			return restTemplate.postForObject(reviewServiceUrl + "-post", body, Review.class);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+	}
+	
+	@Override
+	public Dlc createDlc(Dlc body) {
+		try {
+			return restTemplate.postForObject(dlcServiceUrl + "-post", body, Dlc.class);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+	}
+	
 	@Override
 	public Event createEvent(Event body) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			return restTemplate.postForObject(eventServiceUrl + "-post", body, Event.class);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+	}
+	
+	@Override
+	public void deleteGame(int gameId) {
+		try {
+			restTemplate.delete(gameServiceUrl + "/" + gameId);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+		
+	}
+	
+	@Override
+	public void deleteReviews(int gameId) {
+		try {
+			restTemplate.delete(reviewServiceUrl + "/" + gameId);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+		
+	}
+	
+	@Override
+	public void deleteDlcs(int gameId) {
+		try {
+			restTemplate.delete(dlcServiceUrl + "/" + gameId);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
+		
 	}
 
 	@Override
 	public void deleteEvents(int gameId) {
-		// TODO Auto-generated method stub
+		try {
+			restTemplate.delete(eventServiceUrl + "/" + gameId);
+		} catch (HttpClientErrorException e) {
+			throw handleHttpClientException(e);
+		}
 		
 	}
-
-	@Override
-	public Dlc createDlc(Dlc body) {
-		// TODO Auto-generated method stub
-		return null;
+	
+	//Error handling methods	
+	private String getErrorMessage(HttpClientErrorException ex) {
+		try {
+			return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
+		} catch (IOException ioex) {
+			return ex.getMessage();
+		}
 	}
 
-	@Override
-	public void deleteDlcs(int gameId) {
-		// TODO Auto-generated method stub
-		
-	}
+	
+	private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
+        switch (ex.getStatusCode()) {
 
-	@Override
-	public Review createReview(Review body) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        case NOT_FOUND:
+            return new NotFoundException(getErrorMessage(ex));
 
-	@Override
-	public void deleteReviews(int gameId) {
-		// TODO Auto-generated method stub
-		
-	}
+        case UNPROCESSABLE_ENTITY :
+            return new InvalidInputException(getErrorMessage(ex));
 
-	@Override
-	public Game createGame(Game body) {
-		// TODO Auto-generated method stub
-		return null;
-	}
+        default:
+            LOG.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
+            LOG.warn("Error body: {}", ex.getResponseBodyAsString());
+            return ex;
+        }
+    }
+	
 
-	@Override
-	public void deleteGame(int gameId) {
-		// TODO Auto-generated method stub
-		
-	}
+	
 
 }

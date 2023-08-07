@@ -40,6 +40,23 @@ api:
 
         ## Negative game ids
         422 - An <b>Unprocessable Entity</b> error will be returned
+    create-composite-game:
+      description: Creates a composite game
+      notes: |
+        # Normal response
+        The composite game information posted to the API will be splitted up and stored as separate game-info, dlc, event and review entities.
+
+        # Expected error responses
+        1. If a game with the same gameId as specified in the posted information already exists,
+           an <b>422 - Unprocessable Entity</b> error with a "duplicate key" error message will be returned
+
+    delete-composite-game:
+      description: Deletes a game composite
+      notes: |
+        # Normal response
+        Entities for game information, dlcs, events and reviews related to the specificed gameId will be deleted.
+        The implementation of the delete method is idempotent, i.e. it can be called several times with the same response.
+        This means that a delete request of a non existing game will return <b>200 Ok</b>.
 
 server.port: 7000
 server.error.include-message: always

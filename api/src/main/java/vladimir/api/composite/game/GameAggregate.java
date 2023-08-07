@@ -2,10 +2,6 @@ package vladimir.api.composite.game;
 
 import java.util.List;
 
-import vladimir.api.core.dlc.Dlc;
-import vladimir.api.core.event.Event;
-import vladimir.api.core.review.Review;
-
 public class GameAggregate {
 
 	private final int gameId;
