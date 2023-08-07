@@ -9,7 +9,7 @@ public class Event {
 	private String type;
 	private String name;
 	private Date dateOfStart;
-	private final String serviceAddress;
+	private String serviceAddress;
 
 	public Event() {
 		this.eventId = 0;
@@ -19,7 +19,7 @@ public class Event {
 		this.dateOfStart = null;
 		this.serviceAddress = null;
 	}
-	
+
 	public Event(int eventId, int gameId, String type, String name, Date dateOfStart, String serviceAddress) {
 		super();
 		this.eventId = eventId;
@@ -72,6 +72,10 @@ public class Event {
 
 	public String getServiceAddress() {
 		return serviceAddress;
+	}
+
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }

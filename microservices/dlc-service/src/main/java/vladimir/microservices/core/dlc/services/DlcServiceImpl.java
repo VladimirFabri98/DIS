@@ -1,15 +1,17 @@
 package vladimir.microservices.core.dlc.services;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
 
-import vladimir.api.core.dlc.DlcService;
 import vladimir.api.core.dlc.Dlc;
+import vladimir.api.core.dlc.DlcService;
+import vladimir.microservices.core.dlc.persistence.DlcEntity;
+import vladimir.microservices.core.dlc.persistence.DlcRepository;
 import vladimir.util.exceptions.InvalidInputException;
 import vladimir.util.http.ServiceUtil;
 
@@ -18,42 +20,50 @@ public class DlcServiceImpl implements DlcService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DlcServiceImpl.class);
 	private final ServiceUtil serviceUtil;
+	private final DlcMapper mapper;
+	private final DlcRepository repository;
 	
 	@Autowired
-	public DlcServiceImpl(ServiceUtil serviceUtil) {
+	public DlcServiceImpl(ServiceUtil serviceUtil, DlcMapper mapper, DlcRepository repository) {
 		this.serviceUtil = serviceUtil;
+		this.mapper = mapper;
+		this.repository = repository;
 	}
 	
 	@Override
-	public List<Dlc>getDlcs(int gameId) {
-		
-		LOG.debug("/DLC return the found dlc for gameId={}", gameId);
+	public List<Dlc> getDlcs(int gameId) {
         if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
         
-        if (gameId == 200) {
-            LOG.debug("No dlcs found for gameId: {}", gameId);
-            return  new ArrayList<>();
-        }
+        List<DlcEntity> listEntity = repository.findByGameId(gameId);
+        List<Dlc> listApi = mapper.entityListToApiList(listEntity);
+        listApi.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
         
-        List<Dlc> list = new ArrayList<>();
-        list.add(new Dlc(1,gameId,"Chaos warriors",9,serviceUtil.getServiceAddress()));
-        list.add(new Dlc(2,gameId,"The Warden & the Paunch",10,serviceUtil.getServiceAddress()));
-        list.add(new Dlc(3,gameId,"Forge of the Chaos Dwarfs",25,serviceUtil.getServiceAddress()));
         
-        LOG.debug("/dlc response size: {}", list.size());
+        LOG.debug("/dlc response size: {}", listApi.size());
         
-        return list;
+        return listApi;
 	}
 
 	@Override
 	public Dlc createDlc(Dlc body) {
-		// TODO Auto-generated method stub
-		return null;
+		try {
+			DlcEntity entity = mapper.apiToEntity(body);
+			DlcEntity newEntity = repository.save(entity);
+			Dlc response =  mapper.entityToApi(newEntity);
+			
+			LOG.debug("createDlc: created a dlc entity: {}/{}", body.getGameId(),body.getDlcId());
+			
+			return response;
+		} catch (DuplicateKeyException e) {
+			throw new InvalidInputException("Duplicate key, gameId: "+ body.getGameId() + ", dlcId: " + body.getDlcId());
+		}
+		
 	}
 
 	@Override
 	public void deleteDlcs(int gameId) {
-		// TODO Auto-generated method stub
+		LOG.debug("deleteDlcs: tries to delete dlcs for the game with gameId: {}", gameId);
+		repository.deleteAll(repository.findByGameId(gameId));
 		
 	}
 

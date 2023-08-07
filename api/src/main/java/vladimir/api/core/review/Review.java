@@ -5,7 +5,7 @@ public class Review {
 	private int reviewId;
 	private int gameId;
 	private double rating;
-	private final String serviceAddress;
+	private String serviceAddress;
 
 	public Review() {
 		this.reviewId = 0;
@@ -13,7 +13,7 @@ public class Review {
 		this.rating = 0;
 		this.serviceAddress = null;
 	}
-	
+
 	public Review(int reviewId, int gameId, double rating, String serviceAddress) {
 		super();
 		this.reviewId = reviewId;
@@ -48,6 +48,10 @@ public class Review {
 
 	public String getServiceAddress() {
 		return serviceAddress;
+	}
+
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }
