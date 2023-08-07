@@ -6,7 +6,7 @@ public class Game {
 	private String name;
 	private String producer;
 	private int releaseYear;
-	private final String serviceAddress;
+	private String serviceAddress;
 
 	public Game() {
 		this.gameId = 0;
@@ -59,6 +59,10 @@ public class Game {
 
 	public String getServiceAddress() {
 		return serviceAddress;
+	}
+	
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }

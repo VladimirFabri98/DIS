@@ -5,7 +5,7 @@ public class Review {
 	private int reviewId;
 	private int gameId;
 	private double rating;
-	private final String serviceAddress;
+	private String serviceAddress;
 
 	public Review() {
 		this.reviewId = 0;
@@ -48,6 +48,10 @@ public class Review {
 
 	public String getServiceAddress() {
 		return serviceAddress;
+	}
+	
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }

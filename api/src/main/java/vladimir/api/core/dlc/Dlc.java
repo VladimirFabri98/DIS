@@ -6,7 +6,7 @@ public class Dlc {
 	private int gameId;
 	private String name;
 	private double price;
-	private final String serviceAddress;
+	private String serviceAddress;
 
 	public Dlc() {
 		this.dlcId = 0;
@@ -59,6 +59,10 @@ public class Dlc {
 
 	public String getServiceAddress() {
 		return serviceAddress;
+	}
+	
+	public void setServiceAddress(String serviceAddress) {
+		this.serviceAddress = serviceAddress;
 	}
 
 }

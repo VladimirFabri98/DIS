@@ -1,18 +1,17 @@
 package vladimir.microservices.core.event.services;
 
-import java.sql.Date;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.List;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.web.bind.annotation.RestController;
 
 import vladimir.api.core.event.Event;
 import vladimir.api.core.event.EventService;
+import vladimir.microservices.core.event.persistence.EventEntity;
+import vladimir.microservices.core.event.persistence.EventRepository;
 import vladimir.util.exceptions.InvalidInputException;
 import vladimir.util.http.ServiceUtil;
 
@@ -21,39 +20,50 @@ public class EventServiceImpl implements EventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventServiceImpl.class);
 	private final ServiceUtil serviceUtil;
-	private SimpleDateFormat sdf = new SimpleDateFormat("dd-MM-yyyy");
-	private long date;
-	
-	
+	private final EventMapper mapper;
+	private final EventRepository repository;
 	
 	@Autowired
-	public EventServiceImpl(ServiceUtil serviceUtil) {
+	public EventServiceImpl(ServiceUtil serviceUtil, EventMapper mapper, EventRepository repository ) {
 		this.serviceUtil = serviceUtil;
+		this.mapper = mapper;
+		this.repository = repository;
 	}
-	
-	
+
 	@Override
 	public List<Event> getEvents(int gameId) {
-		try {
-			date = sdf.parse("25-11-2005").getTime();
-		} catch (ParseException e) {
-			LOG.debug("Invalid date");
-		}
-		
-		LOG.debug("/Event return the found event for gameId={}", gameId);
         if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
         
-        if (gameId == 200) {
-            LOG.debug("No events found for gameId: {}", gameId);
-            return  new ArrayList<>();
-        }
+        List<EventEntity> listEntity = repository.findByGameId(gameId);
+        List<Event> listApi = mapper.entityListToApiList(listEntity);
+        listApi.forEach(e -> e.setServiceAddress(serviceUtil.getServiceAddress()));
         
-        List<Event> list = new ArrayList<>();
-        list.add(new Event(1, gameId, "Conference", "Blizzcon", new Date(date), serviceUtil.getServiceAddress()));
-        list.add(new Event(1, gameId, "Conference", "Twitchcon", new Date(date), serviceUtil.getServiceAddress()));
         
-        LOG.debug("/review response size: {}", list.size());
+        LOG.debug("/event response size: {}", listApi.size());
         
-        return list;
+        return listApi;
+	}
+
+	@Override
+	public Event createEvent(Event body) {
+		try {
+			EventEntity entity = mapper.apiToEntity(body);
+			EventEntity newEntity = repository.save(entity);
+			Event response =  mapper.entityToApi(newEntity);
+			
+			LOG.debug("createEvent: created a event entity: {}/{}", body.getGameId(),body.getEventId());
+			
+			return response;
+		} catch (DuplicateKeyException e) {
+			throw new InvalidInputException("Duplicate key, gameId: "+ body.getGameId() + ", eventId: " + body.getEventId());
+		}
+		
+	}
+
+	@Override
+	public void deleteEvents(int gameId) {
+		LOG.debug("deleteEvents: tries to delete events for the game with gameId: {}", gameId);
+		repository.deleteAll(repository.findByGameId(gameId));
+		
 	}
 }
