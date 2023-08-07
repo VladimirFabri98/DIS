@@ -20,11 +20,11 @@ public class EventServiceImpl implements EventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(EventServiceImpl.class);
 	private final ServiceUtil serviceUtil;
-	private final EventMapper mapper;
+	private final EventMapperImpl mapper;
 	private final EventRepository repository;
 	
 	@Autowired
-	public EventServiceImpl(ServiceUtil serviceUtil, EventMapper mapper, EventRepository repository) {
+	public EventServiceImpl(ServiceUtil serviceUtil, EventMapperImpl mapper, EventRepository repository) {
 		this.serviceUtil = serviceUtil;
 		this.mapper = mapper;
 		this.repository = repository;

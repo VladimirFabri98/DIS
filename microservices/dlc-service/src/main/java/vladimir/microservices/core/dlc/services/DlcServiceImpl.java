@@ -20,11 +20,11 @@ public class DlcServiceImpl implements DlcService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(DlcServiceImpl.class);
 	private final ServiceUtil serviceUtil;
-	private final DlcMapper mapper;
+	private final DlcMapperImpl mapper;
 	private final DlcRepository repository;
 	
 	@Autowired
-	public DlcServiceImpl(ServiceUtil serviceUtil, DlcMapper mapper, DlcRepository repository) {
+	public DlcServiceImpl(ServiceUtil serviceUtil, DlcMapperImpl mapper, DlcRepository repository) {
 		this.serviceUtil = serviceUtil;
 		this.mapper = mapper;
 		this.repository = repository;

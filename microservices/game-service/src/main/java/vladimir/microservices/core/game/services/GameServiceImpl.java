@@ -17,11 +17,11 @@ public class GameServiceImpl implements GameService {
 
 	//private static final Logger LOG = LoggerFactory.getLogger(GameServiceImpl.class);
 	private final ServiceUtil serviceUtil;
-	private final GameMapper mapper;
+	private final GameMapperImpl mapper;
 	private final GameRepository repository;
 	
 	@Autowired
-	public GameServiceImpl(ServiceUtil serviceUtil, GameMapper mapper, GameRepository repository) {
+	public GameServiceImpl(ServiceUtil serviceUtil, GameMapperImpl mapper, GameRepository repository) {
 		this.serviceUtil = serviceUtil;
 		this.mapper = mapper;
 		this.repository = repository;
