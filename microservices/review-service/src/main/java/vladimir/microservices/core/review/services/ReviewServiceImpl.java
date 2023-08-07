@@ -44,4 +44,16 @@ public class ReviewServiceImpl implements ReviewService{
         
         return list;
 	}
+
+	@Override
+	public Review createReview(Review body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteReviews(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

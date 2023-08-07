@@ -13,7 +13,7 @@ spring:
       
   data:
     mongodb:
-      auto-index-creation: true    
+      auto-index-creation: true  
 ---
 spring:
   config:

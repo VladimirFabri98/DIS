@@ -56,4 +56,18 @@ public class EventServiceImpl implements EventService {
         
         return list;
 	}
+
+
+	@Override
+	public Event createEvent(Event body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+
+	@Override
+	public void deleteEvents(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
 }

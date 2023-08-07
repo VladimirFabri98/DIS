@@ -37,7 +37,7 @@ class DlcServiceApplicationTests {
 
 	@Test
 	public void getDlcsMissingParameter() {
-
+	
 		client.get()
 			.uri("/dlc")
 			.accept(APPLICATION_JSON)

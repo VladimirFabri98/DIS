@@ -33,4 +33,16 @@ public class GameServiceImpl implements GameService {
 		return new Game(gameId,"World of Warcraft","Blizzard",2007,serviceUtil.getServiceAddress());
 	}
 
+	@Override
+	public Game createGame(Game body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteGame(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

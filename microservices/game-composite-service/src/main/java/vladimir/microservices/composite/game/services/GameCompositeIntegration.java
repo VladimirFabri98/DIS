@@ -154,4 +154,52 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		
 	}
 
+	@Override
+	public Event createEvent(Event body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteEvents(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Dlc createDlc(Dlc body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteDlcs(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Review createReview(Review body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteReviews(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public Game createGame(Game body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteGame(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }

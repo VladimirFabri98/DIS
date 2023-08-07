@@ -45,4 +45,16 @@ public class DlcServiceImpl implements DlcService {
         return list;
 	}
 
+	@Override
+	public Dlc createDlc(Dlc body) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	@Override
+	public void deleteDlcs(int gameId) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
