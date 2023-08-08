@@ -8,6 +8,15 @@ public class ServiceAddresses {
 	private final String dlc;
 	private final String event;
 	
+	public ServiceAddresses() {
+		super();
+		this.cmg = null;
+		this.game = null;
+		this.rev = null;
+		this.dlc = null;
+		this.event = null;
+	}
+	
 	public ServiceAddresses(String compositeGameAddress, String gameAddress, String reviewAddress, 
 			String dlcAdress, String eventAdress ) {
 		this.cmg = compositeGameAddress;

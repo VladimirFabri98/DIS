@@ -4,14 +4,18 @@ import java.util.List;
 
 public class GameAggregate {
 
-	private final int gameId;
-	private final String name;
-	private final String producer;
-	private final int publishYear;
-	private final List<ReviewSummary> reviews;
-	private final List<DlcSummary> dlcs;
-	private final List<EventSummary> events;
-	private final ServiceAddresses serviceAddresses;
+	private int gameId;
+	private String name;
+	private String producer;
+	private int publishYear;
+	private List<ReviewSummary> reviews;
+	private List<DlcSummary> dlcs;
+	private List<EventSummary> events;
+	private ServiceAddresses serviceAddresses;
+	
+	public GameAggregate() {
+		super();
+	}
 
 	public GameAggregate(int gameId, String name, String producer, int publishYear, List<ReviewSummary> reviews,
 			List<DlcSummary> dlcs, List<EventSummary> events, ServiceAddresses serviceAddresses) {

@@ -5,6 +5,7 @@ logging:
   level:
     root: INFO
     vladimir: DEBUG
+    org.springframework.data.mongodb.core.MongoTemplate: DEBUG
 
 spring:
   mongodb:
@@ -13,7 +14,10 @@ spring:
       
   data:
     mongodb:
-      auto-index-creation: true  
+      auto-index-creation: true
+      host: localhost
+      port: 27017
+      database: review-db  
 ---
 spring:
   config:
@@ -21,3 +25,4 @@ spring:
       on-profile: docker
 
 server.port: 8081
+spring.data.mongodb.host: mongodb

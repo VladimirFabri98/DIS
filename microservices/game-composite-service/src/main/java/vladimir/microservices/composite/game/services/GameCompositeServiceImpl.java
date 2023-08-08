@@ -88,7 +88,7 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 					(body.getGameId(),body.getName(),body.getProducer(),body.getPublishYear(),null));
 			if(body.getReviews() != null) {
 				body.getReviews().forEach(r -> {
-					integration.createReview(new Review(r.getReviewId(),body.getGameId(),r.getRating(),body.getServiceAddresses().getRev()));
+					integration.createReview(new Review(r.getReviewId(),body.getGameId(),r.getRating(),null));
 				});
 			}
 			if(body.getDlcs() != null) {

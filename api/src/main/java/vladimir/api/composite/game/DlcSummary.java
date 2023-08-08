@@ -5,6 +5,10 @@ public class DlcSummary {
 	private int dlcId;
 	private String name;
 	private double price;
+	
+	public DlcSummary() {
+		super();
+	}
 
 	public DlcSummary(int dlcId, String name, double price) {
 		super();

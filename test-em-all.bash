@@ -68,7 +68,7 @@ function waitForService() {
     until testUrl $url
     do
         n=$((n + 1))
-        if [[ $n == 100 ]]
+        if [[ $n == 10 ]]
         then
             echo " Give up"
             exit 1
@@ -79,6 +79,36 @@ function waitForService() {
     done
 }
 
+function recreateComposite() {
+    local gameId=$1
+    local composite=$2
+
+    assertCurl 200 "curl -X DELETE http://$HOST:$PORT/game-composite/${gameId} -s"
+	curl -X POST http://$HOST:$PORT/game-composite -H "Content-Type: application/json" --data "$composite"
+}
+
+function setupTestdata() {
+
+    body=\
+'{"gameId":1,"name":"game 1","producer":"producer 1","publishYear": 2023, "dlcs":[
+        {"dlcId":1,"name": "Wrath of the Lich King", "price": 20},
+        {"dlcId":2,"name": "Burning crusade", "price": 5},
+        {"dlcId":3,"name": "Cataclysm", "price": 15}
+    ], "reviews":[
+        {"reviewId":1,"rating": 5},
+        {"reviewId":2,"rating": 4},
+        {"reviewId":3,"rating": 3}
+    ], "events":[
+		{"eventId":1, "type":"Conference", "name":"Blizzcon","dateOfStart":"2023-08-08"},
+		{"eventId":2, "type":"Conference", "name":"Blizzcon","dateOfStart":"2023-09-08"},
+		{"eventId":3, "type":"Conference", "name":"Blizzcon","dateOfStart":"2023-10-08"}
+	]}'
+    recreateComposite 1 "$body"
+	
+	body=\
+'{"gameId":200,"name":"game 200","producer":"producer 200","publishYear": 200}'
+	recreateComposite 200 "$body"
+}
 
 set -e
 
@@ -96,14 +126,16 @@ then
     docker-compose up -d
 fi
 
-waitForService http://$HOST:$PORT/game-composite/1
+waitForService curl -X DELETE http://$HOST:$PORT/game-composite/1
 
-# Verify that a normal request works, expect three dlcs,three reviews and two events
+setupTestdata
+
+# Verify that a normal request works, expect three dlcs,reviews and events
 assertCurl 200 "curl http://$HOST:$PORT/game-composite/1 -s"
 assertEqual 1 $(echo $RESPONSE | jq .gameId)
 assertEqual 3 $(echo $RESPONSE | jq ".dlcs | length")
 assertEqual 3 $(echo $RESPONSE | jq ".reviews | length")
-assertEqual 2 $(echo $RESPONSE | jq ".events | length")
+assertEqual 3 $(echo $RESPONSE | jq ".events | length")
 
 # Verify that a 404 (Not Found) error is returned for a non existing gameId (50)
 assertCurl 404 "curl http://$HOST:$PORT/game-composite/50 -s"

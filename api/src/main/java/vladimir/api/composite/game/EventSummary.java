@@ -8,6 +8,10 @@ public class EventSummary {
 	private String type;
 	private String name;
 	private Date dateOfStart;
+	
+	public EventSummary() {
+		super();
+	}
 
 	public EventSummary(int eventId, String type, String name, Date dateOfStart) {
 		super();

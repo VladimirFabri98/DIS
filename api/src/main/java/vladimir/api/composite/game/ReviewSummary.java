@@ -4,6 +4,10 @@ public class ReviewSummary {
 
 	private int reviewId;
 	private double rating;
+	
+	public ReviewSummary() {
+		super();
+	}
 
 	public ReviewSummary(int reviewId, double rating) {
 		super();
