@@ -29,7 +29,7 @@ public class PersistenceTests {
    		repository.deleteAll();
 
         ReviewEntity entity = new ReviewEntity(1,1,3.5);
-        savedEntity = repository.save(entity);
+        savedEntity = repository.save(entity).block();
 
         assertEqualsReview(entity, savedEntity);
     }
@@ -39,9 +39,9 @@ public class PersistenceTests {
    	public void create() {
 
         ReviewEntity newEntity = new ReviewEntity(1,2,3.5);
-        repository.save(newEntity);
+        repository.save(newEntity).block();
 
-        ReviewEntity foundEntity = repository.findById(newEntity.getId()).get();
+        ReviewEntity foundEntity = repository.findById(newEntity.getId()).block();
         assertEqualsReview(newEntity, foundEntity);
 
         Assertions.assertEquals(2, repository.count());
@@ -50,22 +50,22 @@ public class PersistenceTests {
     @Test
    	public void update() {
         savedEntity.setRating(4);
-        repository.save(savedEntity);
+        repository.save(savedEntity).block();
 
-        ReviewEntity foundEntity = repository.findById(savedEntity.getId()).get();
+        ReviewEntity foundEntity = repository.findById(savedEntity.getId()).block();
         Assertions.assertEquals(1, (long)foundEntity.getVersion());
         Assertions.assertEquals(4, foundEntity.getRating());
     }
 
     @Test
    	public void delete() {
-        repository.delete(savedEntity);
-        Assertions.assertFalse(repository.existsById(savedEntity.getId()));
+        repository.delete(savedEntity).block();
+        Assertions.assertFalse(repository.existsById(savedEntity.getId()).block());
     }
 
     @Test
    	public void getByGameId() {
-    	List<ReviewEntity> entityList = repository.findByGameId(savedEntity.getGameId());
+    	List<ReviewEntity> entityList = repository.findByGameId(savedEntity.getGameId()).collectList().block();
 
         assertThat(entityList.size() == 1);
         assertEqualsReview(savedEntity, entityList.get(0));
@@ -75,7 +75,7 @@ public class PersistenceTests {
    	public void duplicateError() {
     	try {
     		ReviewEntity entity = new ReviewEntity(1,1,3.5);
-            repository.save(entity);
+            repository.save(entity).block();
             
             Assertions.fail("Expected DuplicateKeyException");
 		} catch (DuplicateKeyException e) {}
@@ -86,24 +86,24 @@ public class PersistenceTests {
    	public void optimisticLockError() {
 
         // Store the saved entity in two separate entity objects
-        ReviewEntity entity1 = repository.findById(savedEntity.getId()).get();
-        ReviewEntity entity2 = repository.findById(savedEntity.getId()).get();
+        ReviewEntity entity1 = repository.findById(savedEntity.getId()).block();
+        ReviewEntity entity2 = repository.findById(savedEntity.getId()).block();
 
         // Update the entity using the first entity object
         entity1.setRating(4);
-        repository.save(entity1);
+        repository.save(entity1).block();
 
         //  Update the entity using the second entity object.
         // This should fail since the second entity now holds a old version number, i.e. a Optimistic Lock Error
         try {
             entity2.setRating(4);
-            repository.save(entity2);
+            repository.save(entity2).block();
 
             fail("Expected an OptimisticLockingFailureException");
         } catch (OptimisticLockingFailureException e) {}
 
         // Get the updated entity from the database and verify its new sate
-        ReviewEntity updatedEntity = repository.findById(savedEntity.getId()).get();
+        ReviewEntity updatedEntity = repository.findById(savedEntity.getId()).block();
         Assertions.assertEquals(1, (int)updatedEntity.getVersion());
         Assertions.assertEquals(4, updatedEntity.getRating());
     }

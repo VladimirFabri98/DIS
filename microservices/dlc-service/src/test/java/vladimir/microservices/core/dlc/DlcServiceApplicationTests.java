@@ -34,13 +34,7 @@ class DlcServiceApplicationTests {
 
 		int gameId = 1;
 
-		client.get()
-			.uri("/dlc/" + gameId)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isOk()
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody()
+		getAndVerifyDlcsByGameId(gameId, OK)
 			.jsonPath("$.length()").isEqualTo(3)
 			.jsonPath("$[0].gameId").isEqualTo(gameId);
 	}
@@ -62,13 +56,7 @@ class DlcServiceApplicationTests {
 	@Test
 	public void getDlcsInvalidParameter() {
 
-		client.get()
-			.uri("/dlc/no-integer")
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(BAD_REQUEST)
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody()
+		getAndVerifyDlcsByGameId("no-integer", BAD_REQUEST)
 			.jsonPath("$.path").isEqualTo("/dlc/no-integer")
 			.jsonPath("$.message").isEqualTo("Type mismatch.");
 	}
@@ -78,13 +66,7 @@ class DlcServiceApplicationTests {
 
 		int gameIdNotFound = 200;
 
-		client.get()
-			.uri("/dlc/" + gameIdNotFound)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isOk()
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody()
+		getAndVerifyDlcsByGameId(gameIdNotFound, OK)
 			.jsonPath("$.length()").isEqualTo(0);
 	}
 
@@ -93,13 +75,7 @@ class DlcServiceApplicationTests {
 
 		int gameIdInvalid = -1;
 
-		client.get()
-			.uri("/dlc/" + gameIdInvalid)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(UNPROCESSABLE_ENTITY)
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody()
+		getAndVerifyDlcsByGameId(gameIdInvalid, UNPROCESSABLE_ENTITY)
 			.jsonPath("$.path").isEqualTo("/dlc/-1")
 			.jsonPath("$.message").isEqualTo("Invalid gameId: " + gameIdInvalid);
 	}
@@ -114,13 +90,13 @@ class DlcServiceApplicationTests {
 			.jsonPath("$.gameId").isEqualTo(gameId)
 			.jsonPath("$.dlcId").isEqualTo(dlcId);
 
-		Assertions.assertEquals(1, repository.count());
+		Assertions.assertEquals(1, repository.count().block());
 
 		postAndVerifyDlc(gameId, dlcId, UNPROCESSABLE_ENTITY)
 			.jsonPath("$.path").isEqualTo("/dlc")
 			.jsonPath("$.message").isEqualTo("Duplicate key, Game Id: 1, Dlc Id:1");
 
-		Assertions.assertEquals(1, repository.count());
+		Assertions.assertEquals(1, repository.count().block());
 	}
 	
 	@Test
@@ -130,14 +106,24 @@ class DlcServiceApplicationTests {
 		int dlcId = 1;
 
 		postAndVerifyDlc(gameId, dlcId, OK);
-		Assertions.assertEquals(1, repository.findByGameId(gameId).size());
+		Assertions.assertEquals(1, repository.findByGameId(gameId).collectList().block().size());
 
 		deleteAndVerifyDlcsByGameId(gameId, OK);
-		Assertions.assertEquals(0, repository.findByGameId(gameId).size());
+		Assertions.assertEquals(0, repository.findByGameId(gameId).collectList().block().size());
 
 		deleteAndVerifyDlcsByGameId(gameId, OK);
 	}
 
+	private WebTestClient.BodyContentSpec getAndVerifyDlcsByGameId(int gameId, HttpStatus expectedStatus) {
+		return client.get()
+			.uri("/dlc/" + gameId)
+			.accept(APPLICATION_JSON)
+			.exchange()
+			.expectStatus().isEqualTo(expectedStatus)
+			.expectHeader().contentType(APPLICATION_JSON)
+			.expectBody();
+	}
+	
 	private WebTestClient.BodyContentSpec getAndVerifyDlcsByGameId(String gameId, HttpStatus expectedStatus) {
 		return client.get()
 			.uri("/dlc/" + gameId)

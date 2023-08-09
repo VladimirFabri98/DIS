@@ -1,10 +1,9 @@
 package vladimir.microservices.core.game.persistence;
 
-import java.util.Optional;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
+import reactor.core.publisher.Mono;
 
-import org.springframework.data.repository.PagingAndSortingRepository;
+public interface GameRepository extends ReactiveCrudRepository<GameEntity,String> {
 
-public interface GameRepository extends PagingAndSortingRepository<GameEntity,String> {
-
-	Optional<GameEntity> findByGameId(int gameId);
+	Mono<GameEntity> findByGameId(int gameId);
 }

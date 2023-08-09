@@ -1,10 +1,10 @@
 package vladimir.microservices.core.review.persistence;
 
-import java.util.List;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-import org.springframework.data.repository.CrudRepository;
+import reactor.core.publisher.Flux;
 
-public interface ReviewRepository extends CrudRepository<ReviewEntity,String> {
+public interface ReviewRepository extends ReactiveCrudRepository<ReviewEntity,String> {
 
-	List<ReviewEntity> findByGameId(int gameId);
+	Flux<ReviewEntity> findByGameId(int gameId);
 }

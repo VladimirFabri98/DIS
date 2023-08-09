@@ -1,11 +1,11 @@
 package vladimir.microservices.core.dlc.persistence;
 
-import java.util.List;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-import org.springframework.data.repository.CrudRepository;
+import reactor.core.publisher.Flux;
 
-public interface DlcRepository extends CrudRepository<DlcEntity,String>{
+public interface DlcRepository extends ReactiveCrudRepository<DlcEntity,String>{
 	
-	List<DlcEntity> findByGameId(int gameId);
+	Flux<DlcEntity> findByGameId(int gameId);
 	
 }

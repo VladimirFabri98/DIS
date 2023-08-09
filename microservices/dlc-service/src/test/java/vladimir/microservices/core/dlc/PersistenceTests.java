@@ -29,7 +29,7 @@ public class PersistenceTests {
    		repository.deleteAll();
 
         DlcEntity entity = new DlcEntity(1,1,"n",200);
-        savedEntity = repository.save(entity);
+        savedEntity = repository.save(entity).block();
 
         assertEqualsDlc(entity, savedEntity);
     }
@@ -39,9 +39,9 @@ public class PersistenceTests {
    	public void create() {
 
         DlcEntity newEntity = new DlcEntity(1,2,"n",200);
-        repository.save(newEntity);
+        repository.save(newEntity).block();
 
-        DlcEntity foundEntity = repository.findById(newEntity.getId()).get();
+        DlcEntity foundEntity = repository.findById(newEntity.getId()).block();
         assertEqualsDlc(newEntity, foundEntity);
 
         Assertions.assertEquals(2, repository.count());
@@ -52,7 +52,7 @@ public class PersistenceTests {
         savedEntity.setName("n2");
         repository.save(savedEntity);
 
-        DlcEntity foundEntity = repository.findById(savedEntity.getId()).get();
+        DlcEntity foundEntity = repository.findById(savedEntity.getId()).block();
         Assertions.assertEquals(1, (long)foundEntity.getVersion());
         Assertions.assertEquals("n2", foundEntity.getName());
     }
@@ -60,12 +60,12 @@ public class PersistenceTests {
     @Test
    	public void delete() {
         repository.delete(savedEntity);
-        Assertions.assertFalse(repository.existsById(savedEntity.getId()));
+        Assertions.assertFalse(repository.existsById(savedEntity.getId()).block());
     }
 
     @Test
    	public void getByGameId() {
-    	List<DlcEntity> entityList = repository.findByGameId(savedEntity.getGameId());
+    	List<DlcEntity> entityList = repository.findByGameId(savedEntity.getGameId()).collectList().block();
 
         assertThat(entityList.size() == 1);
         assertEqualsDlc(savedEntity, entityList.get(0));
@@ -75,7 +75,7 @@ public class PersistenceTests {
    	public void duplicateError() {
     	try {
     		DlcEntity entity = new DlcEntity(1,1,"n",200);
-            repository.save(entity);
+            repository.save(entity).block();
             
             Assertions.fail("Expected DuplicateKeyException");
 		} catch (DuplicateKeyException e) {}
@@ -86,24 +86,24 @@ public class PersistenceTests {
    	public void optimisticLockError() {
 
         // Store the saved entity in two separate entity objects
-        DlcEntity entity1 = repository.findById(savedEntity.getId()).get();
-        DlcEntity entity2 = repository.findById(savedEntity.getId()).get();
+        DlcEntity entity1 = repository.findById(savedEntity.getId()).block();
+        DlcEntity entity2 = repository.findById(savedEntity.getId()).block();
 
         // Update the entity using the first entity object
         entity1.setName("n1");
-        repository.save(entity1);
+        repository.save(entity1).block();
 
         //  Update the entity using the second entity object.
         // This should fail since the second entity now holds a old version number, i.e. a Optimistic Lock Error
         try {
             entity2.setName("n2");
-            repository.save(entity2);
+            repository.save(entity2).block();
 
             fail("Expected an OptimisticLockingFailureException");
         } catch (OptimisticLockingFailureException e) {}
 
         // Get the updated entity from the database and verify its new sate
-        DlcEntity updatedEntity = repository.findById(savedEntity.getId()).get();
+        DlcEntity updatedEntity = repository.findById(savedEntity.getId()).block();
         Assertions.assertEquals(1, (int)updatedEntity.getVersion());
         Assertions.assertEquals("n1", updatedEntity.getName());
     }

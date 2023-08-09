@@ -1,10 +1,5 @@
 package vladimir.microservices.core.game;
 
-import static org.assertj.core.api.Assertions.fail;
-
-import java.util.Optional;
-
-import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,6 +7,7 @@ import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.dao.OptimisticLockingFailureException;
 
+import reactor.test.StepVerifier;
 import vladimir.microservices.core.game.persistence.GameEntity;
 import vladimir.microservices.core.game.persistence.GameRepository;
 
@@ -26,12 +22,14 @@ public class PersistenceTests {
 
     @BeforeEach
    	public void setupDb() {
-   		repository.deleteAll();
+   		StepVerifier.create(repository.deleteAll()).verifyComplete();
 
         GameEntity entity = new GameEntity(1, "n", "p",2000);
-        savedEntity = repository.save(entity);
-
-        assertEqualsGame(entity, savedEntity);
+       StepVerifier.create(repository.save(entity)).expectNextMatches(createdEntity -> {
+       		savedEntity = createdEntity;
+       		return areGameEqual(entity,savedEntity);
+       })
+       .verifyComplete();
     }
 
 
@@ -39,77 +37,74 @@ public class PersistenceTests {
    	public void create() {
 
         GameEntity newEntity = new GameEntity(2, "n", "p",2000);
-        repository.save(newEntity);
+        
+        StepVerifier.create(repository.save(newEntity)).expectNextMatches(
+        		createdEntity -> newEntity.getGameId() == createdEntity.getGameId()).verifyComplete();
+        
+        StepVerifier.create(repository.findByGameId(newEntity.getGameId()))
+        .expectNextMatches(foundEntity -> areGameEqual(foundEntity, newEntity)).verifyComplete();
 
-        GameEntity foundEntity = repository.findById(newEntity.getId()).get();
-        assertEqualsGame(newEntity, foundEntity);
-
-        Assertions.assertEquals(2, repository.count());
+        StepVerifier.create(repository.count()).expectNext((long) 2).verifyComplete();
     }
 
     @Test
    	public void update() {
         savedEntity.setName("n2");
-        repository.save(savedEntity);
+       
+        StepVerifier.create(repository.save(savedEntity))
+        .expectNextMatches(updatedEntity -> updatedEntity.getName().equals("n2")).verifyComplete();
+        
+        StepVerifier.create(repository.findByGameId(savedEntity.getGameId()))
+        .expectNextMatches(foundEntity -> foundEntity.getVersion() == 1 && foundEntity.getName().equals("n2")).verifyComplete();
 
-        GameEntity foundEntity = repository.findById(savedEntity.getId()).get();
-        Assertions.assertEquals(1, (long)foundEntity.getVersion());
-        Assertions.assertEquals("n2", foundEntity.getName());
     }
 
     @Test
    	public void delete() {
-        repository.delete(savedEntity);
-        Assertions.assertFalse(repository.existsById(savedEntity.getId()));
+        StepVerifier.create(repository.delete(savedEntity)).verifyComplete();
+        StepVerifier.create(repository.existsById(savedEntity.getId())).expectNext(false).verifyComplete();
     }
 
     @Test
    	public void getByGameId() {
-        Optional<GameEntity> entity = repository.findByGameId(savedEntity.getGameId());
-
-        Assertions.assertTrue(entity.isPresent());
-        assertEqualsGame(savedEntity, entity.get());
+    	StepVerifier.create(repository.findByGameId(savedEntity.getGameId())).
+    	expectNextMatches(foundEntity -> areGameEqual(foundEntity,savedEntity)).verifyComplete();    	
     }
 
     @Test()
    	public void duplicateError() {
     		GameEntity entity = new GameEntity(savedEntity.getGameId(), "n","p",2000);
-            Assertions.assertThrows(DuplicateKeyException.class, () -> repository.save(entity));
+    		StepVerifier.create(repository.save(entity)).expectError(DuplicateKeyException.class).verify();
     }
 
     @Test
    	public void optimisticLockError() {
 
         // Store the saved entity in two separate entity objects
-        GameEntity entity1 = repository.findById(savedEntity.getId()).get();
-        GameEntity entity2 = repository.findById(savedEntity.getId()).get();
+        GameEntity entity1 = repository.findById(savedEntity.getId()).block();
+        GameEntity entity2 = repository.findById(savedEntity.getId()).block();
 
         // Update the entity using the first entity object
         entity1.setName("n1");
-        repository.save(entity1);
+        repository.save(entity1).block();
 
         //  Update the entity using the second entity object.
         // This should fail since the second entity now holds a old version number, i.e. a Optimistic Lock Error
-        try {
-            entity2.setName("n2");
-            repository.save(entity2);
-
-            fail("Expected an OptimisticLockingFailureException");
-        } catch (OptimisticLockingFailureException e) {}
-
+        entity2.setName("n2");
+        StepVerifier.create(repository.save(entity2)).expectError(OptimisticLockingFailureException.class).verify();
+          
         // Get the updated entity from the database and verify its new sate
-        GameEntity updatedEntity = repository.findById(savedEntity.getId()).get();
-        Assertions.assertEquals(1, (int)updatedEntity.getVersion());
-        Assertions.assertEquals("n1", updatedEntity.getName());
+        StepVerifier.create(repository.findById(savedEntity.getId())).
+        expectNextMatches(updatedEntity -> updatedEntity.getVersion() == 1 && updatedEntity.getName().equals("n1")).verifyComplete();
     }
     
-    private void assertEqualsGame(GameEntity expectedEntity, GameEntity actualEntity) {
-    	Assertions.assertEquals(expectedEntity.getId(), actualEntity.getId());
-        Assertions.assertEquals(expectedEntity.getVersion(), actualEntity.getVersion());
-        Assertions.assertEquals(expectedEntity.getGameId(),actualEntity.getGameId());
-        Assertions.assertEquals(expectedEntity.getName(),actualEntity.getName());
-        Assertions.assertEquals(expectedEntity.getProducer(),actualEntity.getProducer());
-        Assertions.assertEquals(expectedEntity.getReleaseYear(),actualEntity.getReleaseYear());
+    private boolean areGameEqual(GameEntity expectedEntity, GameEntity actualEntity) {
+    	return
+                (expectedEntity.getId().equals(actualEntity.getId())) &&
+                (expectedEntity.getVersion() == actualEntity.getVersion()) &&
+                (expectedEntity.getGameId() == actualEntity.getGameId()) &&
+                (expectedEntity.getName().equals(actualEntity.getName())) &&
+                (expectedEntity.getProducer() == actualEntity.getProducer());
     }
 	
 }
