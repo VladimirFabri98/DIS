@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RestController;
 
+import reactor.core.publisher.Mono;
 import vladimir.api.composite.game.DlcSummary;
 import vladimir.api.composite.game.EventSummary;
 import vladimir.api.composite.game.GameAggregate;
@@ -34,13 +35,15 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 	}
 
 	@Override
-	public GameAggregate getCompositeGame(int gameCompositeId) {
-		Game game = integration.getGame(gameCompositeId);
-		List<Review> reviews = integration.getReviews(gameCompositeId);
-		List<Dlc> dlcs = integration.getDlcs(gameCompositeId);
-		List<Event> events = integration.getEvents(gameCompositeId);
-
-		return createGameAggregate(game, reviews, dlcs, events, serviceUtil.getServiceAddress());
+	public Mono<GameAggregate> getCompositeGame(int gameCompositeId) {
+		return Mono.zip(
+				values -> createGameAggregate((Game) values[0], (List<Review>) values[1], (List<Dlc>) values[2],(List<Event>) values[3], serviceUtil.getServiceAddress()),
+				integration.getGame(gameCompositeId),
+				integration.getReviews(gameCompositeId).collectList(),
+				integration.getDlcs(gameCompositeId).collectList(),
+				integration.getEvents(gameCompositeId).collectList())
+		.doOnError(ex -> LOG.warn("getCompositeMeal failed: {}", ex.toString()))
+		.log();
 	}
 
 	private GameAggregate createGameAggregate(Game game, List<Review> reviews, List<Dlc> dlcs, List<Event> events,
@@ -73,9 +76,9 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 		String reviewAddress = (reviews != null && reviews.size() > 0) ? reviews.get(0).getServiceAddress() : "";
 		String dlcAddress = (dlcs != null && dlcs.size() > 0) ? dlcs.get(0).getServiceAddress() : "";
 		String eventAddress = (events != null && events.size() > 0) ? events.get(0).getServiceAddress() : "";
-		ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress,gameAddress,reviewAddress,dlcAddress,eventAddress);
-		
-		
+		ServiceAddresses serviceAddresses = new ServiceAddresses(serviceAddress, gameAddress, reviewAddress, dlcAddress,
+				eventAddress);
+
 		return new GameAggregate(gameId, name, producer, releaseYear, reviewSummaries, dlcSummaries, eventSummaries,
 				serviceAddresses);
 
@@ -84,21 +87,22 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 	@Override
 	public void createCompositeGame(GameAggregate body) {
 		try {
-			integration.createGame(new Game
-					(body.getGameId(),body.getName(),body.getProducer(),body.getPublishYear(),null));
-			if(body.getReviews() != null) {
+			integration.createGame(
+					new Game(body.getGameId(), body.getName(), body.getProducer(), body.getPublishYear(), null));
+			if (body.getReviews() != null) {
 				body.getReviews().forEach(r -> {
-					integration.createReview(new Review(r.getReviewId(),body.getGameId(),r.getRating(),null));
+					integration.createReview(new Review(r.getReviewId(), body.getGameId(), r.getRating(), null));
 				});
 			}
-			if(body.getDlcs() != null) {
+			if (body.getDlcs() != null) {
 				body.getDlcs().forEach(d -> {
-					integration.createDlc(new Dlc(d.getDlcId(),body.getGameId(),d.getName(),d.getPrice(),null));
+					integration.createDlc(new Dlc(d.getDlcId(), body.getGameId(), d.getName(), d.getPrice(), null));
 				});
 			}
-			if(body.getEvents() != null) {
+			if (body.getEvents() != null) {
 				body.getEvents().forEach(e -> {
-					integration.createEvent(new Event(e.getEventId(),body.getGameId(),e.getType(),e.getName(),e.getDateOfStart(),null));
+					integration.createEvent(new Event(e.getEventId(), body.getGameId(), e.getType(), e.getName(),
+							e.getDateOfStart(), null));
 				});
 			}
 		} catch (RuntimeException e) {

@@ -1,21 +1,18 @@
 package vladimir.microservices.composite.game.services;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.core.ParameterizedTypeReference;
-import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.HttpClientErrorException;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.web.reactive.function.client.WebClient;
+import org.springframework.web.reactive.function.client.WebClientResponseException;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
+import reactor.core.publisher.Flux;
+import reactor.core.publisher.Mono;
 import vladimir.api.core.dlc.Dlc;
 import vladimir.api.core.dlc.DlcService;
 import vladimir.api.core.event.Event;
@@ -27,13 +24,14 @@ import vladimir.api.core.review.ReviewService;
 import vladimir.util.exceptions.InvalidInputException;
 import vladimir.util.exceptions.NotFoundException;
 import vladimir.util.http.HttpErrorInfo;
+import static reactor.core.publisher.Flux.empty;
 
 @Component
 public class GameCompositeIntegration implements GameService, ReviewService, DlcService, EventService {
 
 	private static final Logger LOG = LoggerFactory.getLogger(GameCompositeIntegration.class);
 
-	private final RestTemplate restTemplate;
+	private final WebClient webClient;
 	private final ObjectMapper mapper;
 
 	private final String gameServiceUrl;
@@ -42,7 +40,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	private final String eventServiceUrl;
 
 	@Autowired
-	public GameCompositeIntegration(RestTemplate restTemplate, ObjectMapper mapper,
+	public GameCompositeIntegration(WebClient.Builder webClient, ObjectMapper mapper,
 			@Value("${app.game-service.host}") String gameServiceHost,
 			@Value("${app.game-service.port}") int gameServicePort,
 
@@ -55,7 +53,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 			@Value("${app.event-service.host}") String eventServiceHost,
 			@Value("${app.event-service.port}") int eventServicePort) {
 
-		this.restTemplate = restTemplate;
+		this.webClient = webClient.build();
 		this.mapper = mapper;
 
 		gameServiceUrl = "http://" + gameServiceHost + ":" + gameServicePort + "/game";
@@ -66,178 +64,125 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	}
 
 	@Override
-	public Game getGame(int gameId) {
-		try {
-			String url = gameServiceUrl + "/" + gameId;
-			LOG.debug("Will call getGame API on URL: {}", url);
-			Game game = restTemplate.getForObject(url, Game.class);
-			LOG.debug("Found a game with id: {}", game.getGameId());
+	public Mono<Game> getGame(int gameId) {
 
-			return game;
+		String url = gameServiceUrl + "/" + gameId;
+		LOG.debug("Will call getGame API on URL: {}", url);
 
-		} catch (HttpClientErrorException ex) {
-			throw handleHttpClientException(ex);
-		}
+		return webClient.get().uri(url).retrieve().bodyToMono(Game.class).log()
+				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex));
+
 	}
 
-
 	@Override
-	public List<Review> getReviews(int gameId) {
-		try {
+	public Flux<Review> getReviews(int gameId) {
+		
 			String url = reviewServiceUrl + "/" + gameId;
 			LOG.debug("Will call getReviews API on URL: {}", url);
-			List<Review> reviews = restTemplate
-					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Review>>() {
-					}).getBody();
-			LOG.debug("Found {} reviews for a game with id: {}", reviews.size(), gameId);
-			
-			return reviews;
-			
-		} catch (Exception ex) {
-			LOG.warn("Got an exception while requesting reviews, return zero reviews: {}", ex.getMessage());
-			return new ArrayList<>();
-		}
+			return webClient.get().uri(url).retrieve().bodyToFlux(Review.class).log().onErrorResume(error -> empty());
 
 	}
 
 	@Override
-	public List<Dlc> getDlcs(int gameId) {
-		try {
-			String url = dlcServiceUrl + "/" + gameId;
-			LOG.debug("Will call getDlcs API on URL: {}", url);
-			List<Dlc> dlcs = restTemplate.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Dlc>>() {
-			}).getBody();
-			LOG.debug("Found {} dlcs for a game with id: {}", dlcs.size(), gameId);
-			
-			return dlcs;
-		} catch (Exception ex) {
-			LOG.warn("Got an exception while requesting dlcs, return zero dlcs: {}", ex.getMessage());
-			return new ArrayList<>();
-		}
+	public Flux<Dlc> getDlcs(int gameId) {
+		String url = dlcServiceUrl + "/" + gameId;
+		LOG.debug("Will call getDlcs API on URL: {}", url);
+		return webClient.get().uri(url).retrieve().bodyToFlux(Dlc.class).log().onErrorResume(error -> empty());
+
+	}
+
+	@Override
+	public Flux<Event> getEvents(int gameId) {
 		
-	}
-
-	@Override
-	public List<Event> getEvents(int gameId) {
-		try {
 			String url = eventServiceUrl + "/" + gameId;
 			LOG.debug("Will call getEvents API on URL: {}", url);
-			List<Event> events = restTemplate
-					.exchange(url, HttpMethod.GET, null, new ParameterizedTypeReference<List<Event>>() {
-					}).getBody();
-			LOG.debug("Found {} events for a game with id: {}", events.size(), gameId);
-			
-			return events;
-		} catch (Exception ex) {
-			LOG.warn("Got an exception while requesting events, return zero events: {}", ex.getMessage());
-			return new ArrayList<>();
-		}
-		
+			return webClient.get().uri(url).retrieve().bodyToFlux(Event.class).log().onErrorResume(error -> empty());
+
 	}
-	
+
 	@Override
 	public Game createGame(Game body) {
-		try {
-			return restTemplate.postForObject(gameServiceUrl + "-post", body, Game.class);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
+		return webClient.post().uri(gameServiceUrl + "-post").retrieve().bodyToMono(Game.class).log()
+		.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
 	}
-	
+
 	@Override
 	public Review createReview(Review body) {
-		try {
-			return restTemplate.postForObject(reviewServiceUrl + "-post", body, Review.class);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
+		return webClient.post().uri(reviewServiceUrl + "-post").retrieve().bodyToMono(Review.class).log()
+				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
 	}
-	
+
 	@Override
 	public Dlc createDlc(Dlc body) {
-		try {
-			return restTemplate.postForObject(dlcServiceUrl + "-post", body, Dlc.class);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
+		return webClient.post().uri(dlcServiceUrl + "-post").retrieve().bodyToMono(Dlc.class).log()
+				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
 	}
-	
+
 	@Override
 	public Event createEvent(Event body) {
-		try {
-			return restTemplate.postForObject(eventServiceUrl + "-post", body, Event.class);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
+		return webClient.post().uri(eventServiceUrl + "-post").retrieve().bodyToMono(Event.class).log()
+				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
 	}
-	
+
 	@Override
 	public void deleteGame(int gameId) {
-		try {
-			restTemplate.delete(gameServiceUrl + "/" + gameId);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
-		
+		webClient.delete().uri(gameServiceUrl + "/" + gameId).retrieve().bodyToMono(Game.class).log()
+				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
+
 	}
-	
+
 	@Override
 	public void deleteReviews(int gameId) {
-		try {
-			restTemplate.delete(reviewServiceUrl + "/" + gameId);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
-		
+		webClient.delete().uri(reviewServiceUrl + "/" + gameId).retrieve().bodyToMono(Review.class).log()
+		.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
+
 	}
-	
+
 	@Override
 	public void deleteDlcs(int gameId) {
-		try {
-			restTemplate.delete(dlcServiceUrl + "/" + gameId);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
-		
+		webClient.delete().uri(dlcServiceUrl + "/" + gameId).retrieve().bodyToMono(Game.class).log()
+		.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
+
 	}
 
 	@Override
 	public void deleteEvents(int gameId) {
-		try {
-			restTemplate.delete(eventServiceUrl + "/" + gameId);
-		} catch (HttpClientErrorException e) {
-			throw handleHttpClientException(e);
-		}
-		
+		webClient.delete().uri(eventServiceUrl + "/" + gameId).retrieve().bodyToMono(Game.class).log()
+		.onErrorMap(WebClientResponseException.class, ex -> handleException(ex)).block();
+
 	}
-	
-	//Error handling methods	
-	private String getErrorMessage(HttpClientErrorException ex) {
+
+	// Error handling methods
+	private String getErrorMessage(WebClientResponseException ex) {
 		try {
 			return mapper.readValue(ex.getResponseBodyAsString(), HttpErrorInfo.class).getMessage();
 		} catch (IOException ioex) {
 			return ex.getMessage();
 		}
 	}
-
 	
-	private RuntimeException handleHttpClientException(HttpClientErrorException ex) {
-        switch (ex.getStatusCode()) {
+	private Throwable handleException(Throwable ex) {
 
-        case NOT_FOUND:
-            return new NotFoundException(getErrorMessage(ex));
-
-        case UNPROCESSABLE_ENTITY :
-            return new InvalidInputException(getErrorMessage(ex));
-
-        default:
-            LOG.warn("Got a unexpected HTTP error: {}, will rethrow it", ex.getStatusCode());
-            LOG.warn("Error body: {}", ex.getResponseBodyAsString());
+        if (!(ex instanceof WebClientResponseException)) {
+            LOG.warn("Got a unexpected error: {}, will rethrow it", ex.toString());
             return ex;
         }
-    }
-	
+        
+        WebClientResponseException wcre = (WebClientResponseException)ex;
 
-	
+        switch (wcre.getStatusCode()) {
+
+        case NOT_FOUND:
+            return new NotFoundException(getErrorMessage(wcre));
+
+        case UNPROCESSABLE_ENTITY :
+            return new InvalidInputException(getErrorMessage(wcre));
+
+        default:
+            LOG.warn("Got a unexpected HTTP error: {}, will rethrow it", wcre.getStatusCode());
+            LOG.warn("Error body: {}", wcre.getResponseBodyAsString());
+            return ex;
+        }
+	}
 
 }

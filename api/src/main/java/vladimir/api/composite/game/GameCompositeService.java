@@ -10,6 +10,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiResponse;
 import io.swagger.annotations.ApiResponses;
+import reactor.core.publisher.Mono;
 
 @Api(description = "REST API for composite game information.")
 public interface GameCompositeService {
@@ -22,7 +23,7 @@ public interface GameCompositeService {
 	        @ApiResponse(code = 422, message = "Unprocessable entity, input parameters caused the processing to fails. See response message for more information.")
 	    })
 	@GetMapping("game-composite/{gameCompositeId}")
-	GameAggregate getCompositeGame(@PathVariable int gameCompositeId);
+	Mono<GameAggregate> getCompositeGame(@PathVariable int gameCompositeId);
 	
 	
 	 @ApiOperation(

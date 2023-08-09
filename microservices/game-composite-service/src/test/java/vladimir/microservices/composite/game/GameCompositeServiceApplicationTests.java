@@ -16,6 +16,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.HttpStatus;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
+import reactor.core.publisher.Flux;
 import vladimir.api.composite.game.DlcSummary;
 import vladimir.api.composite.game.EventSummary;
 import vladimir.api.composite.game.GameAggregate;
@@ -47,14 +48,14 @@ class GameCompositeServiceApplicationTests {
 	public void setUp() {
 
 		when(compositeIntegration.getGame(GAME_ID_OK)).
-			thenReturn(new Game(GAME_ID_OK, "name","producer",2015, "mock-address"));
+			thenReturn(just(new Game(GAME_ID_OK, "name","producer",2015, "mock-address")));
 		when(compositeIntegration.getReviews(GAME_ID_OK)).
-		thenReturn(Collections.singletonList(new Review(1,GAME_ID_OK,5,"mock-address")));
+		thenReturn(Flux.fromIterable(Collections.singletonList(new Review(1,GAME_ID_OK,5,"mock-address"))));
 		when(compositeIntegration.getDlcs(GAME_ID_OK)).
-			thenReturn(Collections.singletonList(new Dlc(1,GAME_ID_OK,"name",50,"mock-address")));
+			thenReturn(Flux.fromIterable(Collections.singletonList(new Dlc(1,GAME_ID_OK,"name",50,"mock-address"))));
 		when(compositeIntegration.getEvents(GAME_ID_OK)).
-		thenReturn(Collections.singletonList(new Event(1,GAME_ID_OK,"type","name",
-				new Date(System.currentTimeMillis()),"mock-addres")));
+		thenReturn(Flux.fromIterable(Collections.singletonList(new Event(1,GAME_ID_OK,"type","name",
+				new Date(System.currentTimeMillis()),"mock-addres"))));
 		
 
 		when(compositeIntegration.getGame(GAME_ID_NOT_FOUND)).thenThrow(new NotFoundException("NOT FOUND: " + GAME_ID_NOT_FOUND));
