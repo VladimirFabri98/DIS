@@ -6,6 +6,7 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -24,8 +25,7 @@ import vladimir.api.event.Event;
 import vladimir.microservices.core.event.persistence.GameEventRepository;
 import vladimir.util.exceptions.InvalidInputException;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {
-"spring.datasource.url=jdbc:h2:mem:event-db"})
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
 @AutoConfigureWebTestClient
 class GameEventServiceApplicationTests {
 
@@ -55,7 +55,7 @@ class GameEventServiceApplicationTests {
 		sendCreateGameEventEvent(gameId, 2);
 		sendCreateGameEventEvent(gameId, 3);
 
-		assertEquals(3, (long)repository.findByGameId(gameId).size());
+		assertEquals(3, (long)repository.findByGameId(gameId).count().block());
 
 		getAndVerifyGameEventByGameId(gameId, OK)
 			.jsonPath("$.length()").isEqualTo(3)
@@ -78,7 +78,7 @@ class GameEventServiceApplicationTests {
 
 		sendCreateGameEventEvent(gameId, gameEventId);
 
-		assertEquals(1, (long)repository.count());
+		assertEquals(1, (long)repository.count().block());
 
 		try {
 			sendCreateGameEventEvent(gameId, gameEventId);
@@ -92,7 +92,7 @@ class GameEventServiceApplicationTests {
 			}
 		}
 
-		assertEquals(1, (long)repository.count());
+		assertEquals(1, (long)repository.count().block());
 	}
 	
 	@Test
@@ -101,10 +101,10 @@ class GameEventServiceApplicationTests {
 		int gameEventId = 1;
 
 		sendCreateGameEventEvent(gameId, gameEventId);
-		assertEquals(1, (long)repository.findByGameId(gameId).size());
+		assertEquals(1, (long)repository.findByGameId(gameId).count().block());
 
 		sendDeleteGameEventEvent(gameId);
-		assertEquals(0, (long)repository.findByGameId(gameId).size());
+		assertEquals(0, (long)repository.findByGameId(gameId).count().block());
 
 		sendDeleteGameEventEvent(gameId);
 	}

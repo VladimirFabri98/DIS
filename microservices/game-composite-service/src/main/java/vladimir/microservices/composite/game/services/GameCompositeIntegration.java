@@ -2,6 +2,7 @@ package vladimir.microservices.composite.game.services;
 
 import static reactor.core.publisher.Flux.empty;
 import static vladimir.api.event.Event.Type.CREATE;
+import static vladimir.api.event.Event.Type.DELETE;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
@@ -84,8 +85,8 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 			@Value("${app.review-service.host}") String reviewServiceHost,
 			@Value("${app.review-service.port}") int reviewServicePort,
 
-			@Value("${app.event-service.host}") String eventServiceHost,
-			@Value("${app.event-service.port}") int eventServicePort) {
+			@Value("${app.game-event-service.host}") String eventServiceHost,
+			@Value("${app.game-event-service.port}") int eventServicePort) {
 
 		this.webClient = webClient.build();
 		this.mapper = mapper;
@@ -166,26 +167,26 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	@Override
 	public void deleteGame(int gameId) {
 		messageSources.outputGames().send(MessageBuilder.
-				withPayload(new Event<Integer,Game>(CREATE, gameId, null, LocalDateTime.now())).build());
+				withPayload(new Event<Integer,Game>(DELETE, gameId, null, LocalDateTime.now())).build());
 
 	}
 
 	@Override
 	public void deleteReviews(int gameId) {
 		messageSources.outputReviews().send(MessageBuilder.
-				withPayload(new Event<Integer,Review>(CREATE, gameId, null, LocalDateTime.now())).build());
+				withPayload(new Event<Integer,Review>(DELETE, gameId, null, LocalDateTime.now())).build());
 	}
 
 	@Override
 	public void deleteDlcs(int gameId) {
 		messageSources.outputDlcs().send(MessageBuilder.
-				withPayload(new Event<Integer,Dlc>(CREATE, gameId, null, LocalDateTime.now())).build());
+				withPayload(new Event<Integer,Dlc>(DELETE, gameId, null, LocalDateTime.now())).build());
 	}
 
 	@Override
 	public void deleteEvents(int gameId) {
 		messageSources.outputGameEvents().send(MessageBuilder.
-				withPayload(new Event<Integer,GameEvent>(CREATE, gameId, null, LocalDateTime.now())).build());
+				withPayload(new Event<Integer,GameEvent>(DELETE, gameId, null, LocalDateTime.now())).build());
 
 	}
 	

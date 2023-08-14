@@ -3,7 +3,7 @@ package vladimir.microservices.core.event;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.fail;
 
-import java.sql.Date;
+import java.util.Date;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.List;
@@ -12,16 +12,14 @@ import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.boot.test.autoconfigure.data.mongo.DataMongoTest;
 import org.springframework.dao.OptimisticLockingFailureException;
-import org.springframework.transaction.annotation.Propagation;
-import org.springframework.transaction.annotation.Transactional;
 
 import vladimir.microservices.core.event.persistence.GameEventEntity;
 import vladimir.microservices.core.event.persistence.GameEventRepository;
 
-@DataJpaTest
-@Transactional(propagation = Propagation.NOT_SUPPORTED)
+
+@DataMongoTest
 public class PersistenceTests {
 
 	@Autowired
@@ -38,7 +36,7 @@ public class PersistenceTests {
 			date = sdf.parse("04-08-2023").getTime();
 		} catch (ParseException e) {}
 		GameEventEntity entity = new GameEventEntity(1, 1, "t", "n", new Date(date));
-		savedEntity = repository.save(entity);
+		savedEntity = repository.save(entity).block();
 
 		assertEqualsEvent(entity, savedEntity);
 	}
@@ -49,7 +47,7 @@ public class PersistenceTests {
 		GameEventEntity newEntity = new GameEventEntity(1, 2, "t", "n", new Date(date));
 		repository.save(newEntity);
 
-		GameEventEntity foundEntity = repository.findById(newEntity.getId()).get();
+		GameEventEntity foundEntity = repository.findById(newEntity.getId()).block();
 		assertEqualsEvent(newEntity, foundEntity);
 
 		Assertions.assertEquals(2, repository.count());
@@ -60,7 +58,7 @@ public class PersistenceTests {
 		savedEntity.setName("n1");
 		repository.save(savedEntity);
 
-		GameEventEntity foundEntity = repository.findById(savedEntity.getId()).get();
+		GameEventEntity foundEntity = repository.findById(savedEntity.getId()).block();
 		Assertions.assertEquals(1, (long) foundEntity.getVersion());
 		Assertions.assertEquals("n1", foundEntity.getName());
 	}
@@ -68,12 +66,12 @@ public class PersistenceTests {
 	@Test
 	public void delete() {
 		repository.delete(savedEntity);
-		Assertions.assertFalse(repository.existsById(savedEntity.getId()));
+		Assertions.assertFalse(repository.existsById(savedEntity.getId()).block());
 	}
 
 	@Test
 	public void getByGameId() {
-		List<GameEventEntity> entityList = repository.findByGameId(savedEntity.getGameId());
+		List<GameEventEntity> entityList = repository.findByGameId(savedEntity.getGameId()).collectList().block();
 
 		assertThat(entityList.size() == 1);
 		assertEqualsEvent(savedEntity, entityList.get(0));
@@ -91,8 +89,8 @@ public class PersistenceTests {
 	public void optimisticLockError() {
 
 		// Store the saved entity in two separate entity objects
-		GameEventEntity entity1 = repository.findById(savedEntity.getId()).get();
-		GameEventEntity entity2 = repository.findById(savedEntity.getId()).get();
+		GameEventEntity entity1 = repository.findById(savedEntity.getId()).block();
+		GameEventEntity entity2 = repository.findById(savedEntity.getId()).block();
 
 		// Update the entity using the first entity object
 		entity1.setName("n1");
@@ -110,7 +108,7 @@ public class PersistenceTests {
 		}
 
 		// Get the updated entity from the database and verify its new sate
-		GameEventEntity updatedEntity = repository.findById(savedEntity.getId()).get();
+		GameEventEntity updatedEntity = repository.findById(savedEntity.getId()).block();
 		Assertions.assertEquals(1, (int) updatedEntity.getVersion());
 		Assertions.assertEquals("n1", updatedEntity.getName());
 	}

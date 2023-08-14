@@ -1,12 +1,10 @@
 package vladimir.microservices.core.event.persistence;
 
-import java.util.List;
+import org.springframework.data.repository.reactive.ReactiveCrudRepository;
 
-import org.springframework.data.repository.CrudRepository;
-import org.springframework.transaction.annotation.Transactional;
+import reactor.core.publisher.Flux;
 
-public interface GameEventRepository extends CrudRepository<GameEventEntity, Integer> {
+public interface GameEventRepository extends ReactiveCrudRepository<GameEventEntity,String> {
 
-	@Transactional(readOnly = true)
-	List<GameEventEntity> findByGameId(int gameId);
+	Flux<GameEventEntity> findByGameId(int gameId);
 }

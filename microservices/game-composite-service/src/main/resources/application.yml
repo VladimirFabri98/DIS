@@ -71,7 +71,7 @@ app:
   dlc-service:
     host: localhost
     port: 7003
-  event-service:
+  game-event-service:
     host: localhost
     port: 7004
 
@@ -132,8 +132,8 @@ app:
   review-service:
     host: review
     port: 8081
-  event-service:
-    host: event
+  game-event-service:
+    host: game-event
     port: 8081
     
 spring.rabbitmq.host: rabbitmq

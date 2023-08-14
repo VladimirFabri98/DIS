@@ -3,9 +3,10 @@ package vladimir.microservices.core.event.services;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.springframework.stereotype.Component;
+
 import vladimir.api.core.gameEvent.GameEvent;
 import vladimir.microservices.core.event.persistence.GameEventEntity;
-import org.springframework.stereotype.Component;
 
 @Component
 public class GameEventMapperImpl implements GameEventMapper

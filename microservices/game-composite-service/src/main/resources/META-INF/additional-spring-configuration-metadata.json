@@ -113,5 +113,15 @@
     "name": "api.game-composite.delete-composite-game.notes",
     "type": "java.lang.String",
     "description": "A description for 'api.game-composite.delete-composite-game.notes'"
+  },
+  {
+    "name": "app.game-event-service.host",
+    "type": "java.lang.String",
+    "description": "A description for 'app.game-event-service.host'"
+  },
+  {
+    "name": "app.game-event-service.port",
+    "type": "java.lang.String",
+    "description": "A description for 'app.game-event-service.port'"
   }
 ]}

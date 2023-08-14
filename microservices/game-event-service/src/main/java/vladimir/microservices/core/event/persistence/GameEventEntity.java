@@ -1,22 +1,19 @@
 package vladimir.microservices.core.event.persistence;
 
-import java.sql.Date;
+import java.util.Date;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.Id;
-import javax.persistence.Index;
-import javax.persistence.Table;
-import javax.persistence.Version;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.annotation.Version;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
+import org.springframework.data.mongodb.core.mapping.Document;
 
 
-@Entity
-@Table(name = "events", indexes = { @Index(name = "events_unique_idx", unique = true, columnList = "gameId,eventId") })
+@Document(collection = "events")
+@CompoundIndex(name = "game-event-review-id", unique = true, def = "{'gameId':1, 'eventId':1}")
 public class GameEventEntity {
 
 	@Id
-	@GeneratedValue
-	private int id;
+	private String id;
 
 	@Version
 	private int version;
@@ -40,11 +37,11 @@ public class GameEventEntity {
 		this.dateOfStart = dateOfStart;
 	}
 
-	public int getId() {
+	public String getId() {
 		return id;
 	}
 
-	public void setId(int id) {
+	public void setId(String id) {
 		this.id = id;
 	}
 
