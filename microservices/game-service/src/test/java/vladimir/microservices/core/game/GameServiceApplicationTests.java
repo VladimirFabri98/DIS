@@ -5,19 +5,28 @@ import static org.springframework.http.HttpStatus.BAD_REQUEST;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static reactor.core.publisher.Mono.just;
 
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.AbstractMessageChannel;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
-import reactor.test.StepVerifier;
 import vladimir.api.core.game.Game;
+import vladimir.api.event.Event;
 import vladimir.microservices.core.game.persistence.GameRepository;
+import vladimir.util.exceptions.InvalidInputException;
+
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT,properties = {"spring.data.mongodb.port: 0"})
 @AutoConfigureWebTestClient
@@ -27,11 +36,17 @@ class GameServiceApplicationTests {
 	private WebTestClient client;
 	
 	@Autowired
+	private Sink channels;
+
+	private AbstractMessageChannel input = null;
+	
+	@Autowired
 	private GameRepository repository;
 	
 	@BeforeEach
 	public void setupDb() {
-		repository.deleteAll();
+		input = (AbstractMessageChannel) channels.input();
+		repository.deleteAll().block();
 	}
 	
 	@Test
@@ -39,7 +54,15 @@ class GameServiceApplicationTests {
 
 		int gameId = 1;
 
-        getAndVerifyGame(gameId, OK)
+		assertNull(repository.findByGameId(gameId).block());
+		assertEquals(0, (long)repository.count().block());
+
+		sendCreateGameEvent(gameId);
+
+		assertNotNull(repository.findByGameId(gameId).block());
+		assertEquals(1, (long)repository.count().block());
+
+		getAndVerifyGame(gameId, OK)
             .jsonPath("$.gameId").isEqualTo(gameId);
 	}
 
@@ -56,12 +79,23 @@ class GameServiceApplicationTests {
 
 		int gameId = 1;
 
-		postAndVerifyGame(gameId, OK);
-		StepVerifier.create(repository.findByGameId(gameId)).expectNextMatches(e -> e != null).verifyComplete();
+		assertNull(repository.findByGameId(gameId).block());
 
-		postAndVerifyGame(gameId, UNPROCESSABLE_ENTITY)
-			.jsonPath("$.path").isEqualTo("/game")
-			.jsonPath("$.message").isEqualTo("Duplicate key, Game Id: " + gameId);
+		sendCreateGameEvent(gameId);
+
+		assertNotNull(repository.findByGameId(gameId).block());
+
+		try {
+			sendCreateGameEvent(gameId);
+			Assertions.fail("Expected a MessagingException here!");
+		} catch (MessagingException me) {
+			if (me.getCause() instanceof InvalidInputException)	{
+				InvalidInputException iie = (InvalidInputException)me.getCause();
+				assertEquals("Duplicate key, Game Id: " + gameId, iie.getMessage());
+			} else {
+				Assertions.fail("Expected a InvalidInputException as the root cause!");
+			}
+		}
 	}
 	
 	@Test
@@ -69,13 +103,13 @@ class GameServiceApplicationTests {
 
 		int gameId = 1;
 
-		postAndVerifyGame(gameId, OK);
-		StepVerifier.create(repository.findByGameId(gameId)).expectNextMatches(e -> e != null).verifyComplete();
+		sendCreateGameEvent(gameId);
+		assertNotNull(repository.findByGameId(gameId).block());
 
-		deleteAndVerifyGame(gameId, OK);
-		StepVerifier.create(repository.findByGameId(gameId)).expectNextMatches(e -> e == null).verifyComplete();
+		sendDeleteGameEvent(gameId);
+		assertNull(repository.findByGameId(gameId).block());
 
-		deleteAndVerifyGame(gameId, OK);
+		sendDeleteGameEvent(gameId);
 	}
 
 	@Test
@@ -118,25 +152,16 @@ class GameServiceApplicationTests {
 			.expectBody();
 	}
 
-	private WebTestClient.BodyContentSpec postAndVerifyGame(int gameId, HttpStatus expectedStatus) {
-		Game game = new Game(gameId,"n","p",2020,"SA");
-		return client.post()
-			.uri("/game")
-			.body(just(game), Game.class)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(expectedStatus)
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody();
+	private void sendCreateGameEvent(int gameId) {
+		Game game = new Game(gameId, "name", "producer", 2020,null);
+		
+		Event<Integer, Game> event = new Event(Event.Type.CREATE, gameId, game, null);
+		input.send(new GenericMessage<>(event));
 	}
 
-	private WebTestClient.BodyContentSpec deleteAndVerifyGame(int gameId, HttpStatus expectedStatus) {
-		return client.delete()
-			.uri("/game/" + gameId)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(expectedStatus)
-			.expectBody();
+	private void sendDeleteGameEvent(int gameId) {
+		Event<Integer, Game> event = new Event(Event.Type.DELETE, gameId, null, null);
+		input.send(new GenericMessage<>(event));
 	}
 
 }

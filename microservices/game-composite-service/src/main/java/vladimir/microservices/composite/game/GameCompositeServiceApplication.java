@@ -5,8 +5,16 @@ import static org.springframework.web.bind.annotation.RequestMethod.GET;
 import static springfox.documentation.builders.RequestHandlerSelectors.basePackage;
 import static springfox.documentation.spi.DocumentationType.SWAGGER_2;
 
+import java.util.LinkedHashMap;
+
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.actuate.health.CompositeReactiveHealthIndicator;
+import org.springframework.boot.actuate.health.DefaultReactiveHealthIndicatorRegistry;
+import org.springframework.boot.actuate.health.HealthAggregator;
+import org.springframework.boot.actuate.health.ReactiveHealthIndicator;
+import org.springframework.boot.actuate.health.ReactiveHealthIndicatorRegistry;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.ComponentScan;
@@ -16,6 +24,7 @@ import springfox.documentation.builders.PathSelectors;
 import springfox.documentation.service.ApiInfo;
 import springfox.documentation.service.Contact;
 import springfox.documentation.spring.web.plugins.Docket;
+import vladimir.microservices.composite.game.services.GameCompositeIntegration;
 
 @SpringBootApplication
 @ComponentScan("vladimir")
@@ -55,7 +64,28 @@ public class GameCompositeServiceApplication {
 	RestTemplate restTemplate() {
 		return new RestTemplate();
 	}
+	
+	@Autowired
+	HealthAggregator healthAggregator;
 
+	@Autowired
+	GameCompositeIntegration integration;
+
+	
+	@Bean
+	ReactiveHealthIndicator coreServices() {
+
+		ReactiveHealthIndicatorRegistry registry = new DefaultReactiveHealthIndicatorRegistry(new LinkedHashMap<>());
+
+		registry.register("game", () -> integration.getGameHealth());
+		registry.register("dlc", () -> integration.getDlcHealth());
+		registry.register("review", () -> integration.getReviewHealth());
+		registry.register("gameEvent", () -> integration.getGameEventHealth());
+
+		return new CompositeReactiveHealthIndicator(healthAggregator, registry);
+	}
+
+	
 	public static void main(String[] args) {
 		SpringApplication.run(GameCompositeServiceApplication.class, args);
 	}

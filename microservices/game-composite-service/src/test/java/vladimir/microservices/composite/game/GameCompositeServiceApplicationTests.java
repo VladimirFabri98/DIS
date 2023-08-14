@@ -3,6 +3,7 @@ package vladimir.microservices.composite.game;
 import static org.mockito.Mockito.when;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
+import static reactor.core.publisher.Mono.just;
 
 import java.sql.Date;
 import java.util.Collections;
@@ -22,13 +23,12 @@ import vladimir.api.composite.game.EventSummary;
 import vladimir.api.composite.game.GameAggregate;
 import vladimir.api.composite.game.ReviewSummary;
 import vladimir.api.core.dlc.Dlc;
-import vladimir.api.core.event.Event;
 import vladimir.api.core.game.Game;
+import vladimir.api.core.gameEvent.GameEvent;
 import vladimir.api.core.review.Review;
 import vladimir.microservices.composite.game.services.GameCompositeIntegration;
 import vladimir.util.exceptions.InvalidInputException;
 import vladimir.util.exceptions.NotFoundException;
-import static reactor.core.publisher.Mono.just;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureWebTestClient
@@ -54,7 +54,7 @@ class GameCompositeServiceApplicationTests {
 		when(compositeIntegration.getDlcs(GAME_ID_OK)).
 			thenReturn(Flux.fromIterable(Collections.singletonList(new Dlc(1,GAME_ID_OK,"name",50,"mock-address"))));
 		when(compositeIntegration.getEvents(GAME_ID_OK)).
-		thenReturn(Flux.fromIterable(Collections.singletonList(new Event(1,GAME_ID_OK,"type","name",
+		thenReturn(Flux.fromIterable(Collections.singletonList(new GameEvent(1,GAME_ID_OK,"type","name",
 				new Date(System.currentTimeMillis()),"mock-addres"))));
 		
 

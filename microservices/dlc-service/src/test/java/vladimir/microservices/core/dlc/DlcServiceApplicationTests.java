@@ -1,23 +1,28 @@
 package vladimir.microservices.core.dlc;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.springframework.boot.test.context.SpringBootTest.WebEnvironment.RANDOM_PORT;
 import static org.springframework.http.HttpStatus.BAD_REQUEST;
-import static org.springframework.http.HttpStatus.NOT_FOUND;
 import static org.springframework.http.HttpStatus.OK;
 import static org.springframework.http.HttpStatus.UNPROCESSABLE_ENTITY;
 import static org.springframework.http.MediaType.APPLICATION_JSON;
-import static reactor.core.publisher.Mono.just;
-
 import org.junit.jupiter.api.Assertions;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.reactive.AutoConfigureWebTestClient;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.cloud.stream.messaging.Sink;
 import org.springframework.http.HttpStatus;
+import org.springframework.messaging.MessagingException;
+import org.springframework.messaging.support.AbstractMessageChannel;
+import org.springframework.messaging.support.GenericMessage;
 import org.springframework.test.web.reactive.server.WebTestClient;
 
 import vladimir.api.core.dlc.Dlc;
+import vladimir.api.event.Event;
 import vladimir.microservices.core.dlc.persistence.DlcRepository;
+import vladimir.util.exceptions.InvalidInputException;
 
 @SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
 @AutoConfigureWebTestClient
@@ -27,104 +32,103 @@ class DlcServiceApplicationTests {
 	private WebTestClient client;
 	
 	@Autowired
+	private Sink channels;
+
+	private AbstractMessageChannel input = null;
+	
+	@Autowired
 	private DlcRepository repository;
 	
+	@BeforeEach
+	public void setupDb() {
+		input = (AbstractMessageChannel) channels.input();
+		repository.deleteAll().block();
+	}
+	
 	@Test
-	public void getDlcsByProductId() {
+	public void getDlcsByGameId() {
 
 		int gameId = 1;
 
-		getAndVerifyDlcsByGameId(gameId, OK)
+		sendCreateDlcEvent(gameId, 1);
+		sendCreateDlcEvent(gameId, 2);
+		sendCreateDlcEvent(gameId, 3);
+
+		assertEquals(3, (long)repository.findByGameId(gameId).count().block());
+
+		getAndVerifyDlcByGameId(gameId, OK)
 			.jsonPath("$.length()").isEqualTo(3)
-			.jsonPath("$[0].gameId").isEqualTo(gameId);
+			.jsonPath("$[2].gameId").isEqualTo(gameId)
+			.jsonPath("$[2].dlcId").isEqualTo(3);
 	}
 
 	@Test
-	public void getDlcsMissingParameter() {
+	public void getDlcInvalidParameterString() {
 
-		client.get()
-			.uri("/dlc")
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(NOT_FOUND)
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody()
-			.jsonPath("$.path").isEqualTo("/dlc")
-			.jsonPath("$.message").isEqualTo(null);
-	}
-
-	@Test
-	public void getDlcsInvalidParameter() {
-
-		getAndVerifyDlcsByGameId("no-integer", BAD_REQUEST)
-			.jsonPath("$.path").isEqualTo("/dlc/no-integer")
-			.jsonPath("$.message").isEqualTo("Type mismatch.");
-	}
-
-	@Test
-	public void getDlcsNotFound() {
-
-		int gameIdNotFound = 200;
-
-		getAndVerifyDlcsByGameId(gameIdNotFound, OK)
-			.jsonPath("$.length()").isEqualTo(0);
-	}
-
-	@Test
-	public void getDlcsInvalidParameterNegativeValue() {
-
-		int gameIdInvalid = -1;
-
-		getAndVerifyDlcsByGameId(gameIdInvalid, UNPROCESSABLE_ENTITY)
-			.jsonPath("$.path").isEqualTo("/dlc/-1")
-			.jsonPath("$.message").isEqualTo("Invalid gameId: " + gameIdInvalid);
+        getAndVerifyDlcByGameId("no-integer", BAD_REQUEST)
+            .jsonPath("$.path").isEqualTo("/dlc/no-integer")
+            .jsonPath("$.message").isEqualTo("Type mismatch.");
 	}
 	
 	@Test
 	public void duplicateError() {
-
 		int gameId = 1;
 		int dlcId = 1;
 
-		postAndVerifyDlc(gameId, dlcId, OK)
-			.jsonPath("$.gameId").isEqualTo(gameId)
-			.jsonPath("$.dlcId").isEqualTo(dlcId);
+		sendCreateDlcEvent(gameId, dlcId);
 
-		Assertions.assertEquals(1, repository.count().block());
+		assertEquals(1, (long)repository.count().block());
 
-		postAndVerifyDlc(gameId, dlcId, UNPROCESSABLE_ENTITY)
-			.jsonPath("$.path").isEqualTo("/dlc")
-			.jsonPath("$.message").isEqualTo("Duplicate key, Game Id: 1, Dlc Id:1");
+		try {
+			sendCreateDlcEvent(gameId, dlcId);
+			Assertions.fail("Expected a MessagingException here!");
+		} catch (MessagingException me) {
+			if (me.getCause() instanceof InvalidInputException)	{
+				InvalidInputException iie = (InvalidInputException)me.getCause();
+				assertEquals("Duplicate key, Game Id: 1, Dlc Id:1", iie.getMessage());
+			} else {
+				Assertions.fail("Expected a InvalidInputException as the root cause!");
+			}
+		}
 
-		Assertions.assertEquals(1, repository.count().block());
+		assertEquals(1, (long)repository.count().block());
 	}
 	
 	@Test
 	public void deleteDlc() {
-
 		int gameId = 1;
 		int dlcId = 1;
 
-		postAndVerifyDlc(gameId, dlcId, OK);
-		Assertions.assertEquals(1, repository.findByGameId(gameId).collectList().block().size());
+		sendCreateDlcEvent(gameId, dlcId);
+		assertEquals(1, (long)repository.findByGameId(gameId).count().block());
 
-		deleteAndVerifyDlcsByGameId(gameId, OK);
-		Assertions.assertEquals(0, repository.findByGameId(gameId).collectList().block().size());
+		sendDeleteDlcEvent(gameId);
+		assertEquals(0, (long)repository.findByGameId(gameId).count().block());
 
-		deleteAndVerifyDlcsByGameId(gameId, OK);
+		sendDeleteDlcEvent(gameId);
 	}
 
-	private WebTestClient.BodyContentSpec getAndVerifyDlcsByGameId(int gameId, HttpStatus expectedStatus) {
-		return client.get()
-			.uri("/dlc/" + gameId)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(expectedStatus)
-			.expectHeader().contentType(APPLICATION_JSON)
-			.expectBody();
+	@Test
+	public void getDlcNotFound() {
+
+		int dlcIdNotFound = 50;
+
+        getAndVerifyDlcByGameId(dlcIdNotFound, HttpStatus.NOT_FOUND)
+            .jsonPath("$.path").isEqualTo("/dlc/" + dlcIdNotFound)
+            .jsonPath("$.message").isEqualTo("No dlc found for dlcId: " + dlcIdNotFound);
+	}
+
+	@Test
+	public void getDlcInvalidParameterNegativeValue() {
+
+        int dlcIdInvalid = -1;
+
+        getAndVerifyDlcByGameId(dlcIdInvalid, UNPROCESSABLE_ENTITY)
+            .jsonPath("$.path").isEqualTo("/dlc/" + dlcIdInvalid)
+            .jsonPath("$.message").isEqualTo("Invalid dlcId: " + dlcIdInvalid);
 	}
 	
-	private WebTestClient.BodyContentSpec getAndVerifyDlcsByGameId(String gameId, HttpStatus expectedStatus) {
+	private WebTestClient.BodyContentSpec getAndVerifyDlcByGameId(int gameId, HttpStatus expectedStatus) {
 		return client.get()
 			.uri("/dlc/" + gameId)
 			.accept(APPLICATION_JSON)
@@ -134,11 +138,9 @@ class DlcServiceApplicationTests {
 			.expectBody();
 	}
 
-	private WebTestClient.BodyContentSpec postAndVerifyDlc(int gameId, int dlcId, HttpStatus expectedStatus) {
-		Dlc dlc = new Dlc(dlcId,gameId,"n",20,"SA");
-		return client.post()
-			.uri("/dlc")
-			.body(just(dlc), Dlc.class)
+	private WebTestClient.BodyContentSpec getAndVerifyDlcByGameId(String gameId, HttpStatus expectedStatus) {
+		return client.get()
+			.uri("/dlc/" + gameId)
 			.accept(APPLICATION_JSON)
 			.exchange()
 			.expectStatus().isEqualTo(expectedStatus)
@@ -146,12 +148,15 @@ class DlcServiceApplicationTests {
 			.expectBody();
 	}
 
-	private WebTestClient.BodyContentSpec deleteAndVerifyDlcsByGameId(int gameId, HttpStatus expectedStatus) {
-		return client.delete()
-			.uri("/dlc/" + gameId)
-			.accept(APPLICATION_JSON)
-			.exchange()
-			.expectStatus().isEqualTo(expectedStatus)
-			.expectBody();
+	private void sendCreateDlcEvent(int gameId, int dlcId) {
+		Dlc dlc = new Dlc(dlcId, gameId, "name", 20,null);
+		
+		Event<Integer, Dlc> event = new Event(Event.Type.CREATE, dlcId, dlc, null);
+		input.send(new GenericMessage<>(event));
+	}
+
+	private void sendDeleteDlcEvent(int dlcId) {
+		Event<Integer, Dlc> event = new Event(Event.Type.DELETE, dlcId, null, null);
+		input.send(new GenericMessage<>(event));
 	}
 }

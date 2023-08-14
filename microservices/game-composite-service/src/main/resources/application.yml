@@ -75,16 +75,51 @@ app:
     host: localhost
     port: 7004
 
+spring.cloud.stream:
+  defaultBinder: rabbit
+  default.contentType: application/json
+  bindings:
+    output-games:
+      destination: games
+      producer:
+        required-groups:
+          auditGroup
+    output-reviews:
+      destination: reviews
+      producer:
+        required-groups:
+          auditGroup
+    output-dlcs:
+      destination: dlcs
+      producer:
+        required-groups:
+          auditGroup
+    output-game-events:
+      destination: gameEvents
+      producer:
+        required-groups:
+          auditGroup
+
+spring.cloud.stream.kafka.binder:
+  brokers: 127.0.0.1
+  defaultBrokerPort: 9092
+
+spring.rabbitmq:
+  host: 127.0.0.1
+  port: 5672
+  username: guest
+  password: guest
+
 logging:
   level:
     root: INFO
     vladimir: DEBUG
 
+management.endpoint.health.show-details: "ALWAYS"
+management.endpoints.web.exposure.include: "*"
 ---
-spring:
-  config:
-    activate:
-      on-profile: docker
+spring.profiles: docker
+
 server.port: 8081
 
 app:
@@ -100,3 +135,8 @@ app:
   event-service:
     host: event
     port: 8081
+    
+spring.rabbitmq.host: rabbitmq
+
+spring.cloud.stream.kafka.binder.brokers: kafka    
+

@@ -16,8 +16,8 @@ import vladimir.api.composite.game.GameCompositeService;
 import vladimir.api.composite.game.ReviewSummary;
 import vladimir.api.composite.game.ServiceAddresses;
 import vladimir.api.core.dlc.Dlc;
-import vladimir.api.core.event.Event;
 import vladimir.api.core.game.Game;
+import vladimir.api.core.gameEvent.GameEvent;
 import vladimir.api.core.review.Review;
 import vladimir.util.http.ServiceUtil;
 
@@ -37,7 +37,7 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 	@Override
 	public Mono<GameAggregate> getCompositeGame(int gameCompositeId) {
 		return Mono.zip(
-				values -> createGameAggregate((Game) values[0], (List<Review>) values[1], (List<Dlc>) values[2],(List<Event>) values[3], serviceUtil.getServiceAddress()),
+				values -> createGameAggregate((Game) values[0], (List<Review>) values[1], (List<Dlc>) values[2],(List<GameEvent>) values[3], serviceUtil.getServiceAddress()),
 				integration.getGame(gameCompositeId),
 				integration.getReviews(gameCompositeId).collectList(),
 				integration.getDlcs(gameCompositeId).collectList(),
@@ -46,7 +46,7 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 		.log();
 	}
 
-	private GameAggregate createGameAggregate(Game game, List<Review> reviews, List<Dlc> dlcs, List<Event> events,
+	private GameAggregate createGameAggregate(Game game, List<Review> reviews, List<Dlc> dlcs, List<GameEvent> events,
 			String serviceAddress) {
 
 		// 1. Setup game info
@@ -101,7 +101,7 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 			}
 			if (body.getEvents() != null) {
 				body.getEvents().forEach(e -> {
-					integration.createEvent(new Event(e.getEventId(), body.getGameId(), e.getType(), e.getName(),
+					integration.createEvent(new GameEvent(e.getEventId(), body.getGameId(), e.getType(), e.getName(),
 							e.getDateOfStart(), null));
 				});
 			}
