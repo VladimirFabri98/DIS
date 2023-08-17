@@ -19,7 +19,7 @@ import vladimir.api.composite.game.GameAggregate;
 
 import vladimir.microservices.composite.game.services.GameCompositeIntegration;
 
-@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = WebEnvironment.RANDOM_PORT, properties = {"eureka.client.enabled=false"})
 public class MessagingTests {
 
 	@Autowired

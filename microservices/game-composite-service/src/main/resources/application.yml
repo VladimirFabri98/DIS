@@ -60,20 +60,23 @@ api:
 
 server.port: 7000
 server.error.include-message: always
+spring:
+  application:
+    name: game-composite-service
 
-app:
-  game-service:
-    host: localhost
-    port: 7001
-  review-service:
-    host: localhost
-    port: 7002
-  dlc-service:
-    host: localhost
-    port: 7003
-  game-event-service:
-    host: localhost
-    port: 7004
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://localhost:8761/eureka/
+    initialInstanceInfoReplicationIntervalSeconds: 5
+    registryFetchIntervalSeconds: 5
+  instance:
+    leaseRenewalIntervalInSeconds: 5
+    leaseExpirationDurationInSeconds: 5
+
+ribbon.ServerListRefreshInterval: 5000
+
+ribbon.NFLoadBalancerPingInterval: 5
 
 spring.cloud.stream:
   defaultBinder: rabbit
@@ -115,26 +118,15 @@ logging:
     root: INFO
     vladimir: DEBUG
 
-management.endpoint.health.show-details: "ALWAYS"
-management.endpoints.web.exposure.include: "*"
 ---
 spring.profiles: docker
 
 server.port: 8081
 
-app:
-  game-service:
-    host: game
-    port: 8081
-  dlc-service:
-    host: dlc
-    port: 8081
-  review-service:
-    host: review
-    port: 8081
-  game-event-service:
-    host: game-event
-    port: 8081
+eureka:
+  client:
+    serviceUrl:
+      defaultZone: http://eureka:8761/eureka/
     
 spring.rabbitmq.host: rabbitmq
 

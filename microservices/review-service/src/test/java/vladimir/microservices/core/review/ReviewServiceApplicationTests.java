@@ -24,7 +24,7 @@ import vladimir.api.event.Event;
 import vladimir.microservices.core.review.persistence.ReviewRepository;
 import vladimir.util.exceptions.InvalidInputException;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0"})
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0", "eureka.client.enabled=false"})
 @AutoConfigureWebTestClient
 class ReviewServiceApplicationTests {
 

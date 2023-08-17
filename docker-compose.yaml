@@ -49,13 +49,23 @@ services:
   game-composite:
     build: microservices/game-composite-service
     mem_limit: 350m
-    ports:
-      - "8081:8081"
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
       rabbitmq:
         condition: service_healthy
+
+  eureka:
+    build: eureka-server
+    mem_limit: 350m
+
+  gateway:
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    build: gateway
+    mem_limit: 350m
+    ports:
+      - "8081:8081"
 
   # $ mongo
   mongodb:

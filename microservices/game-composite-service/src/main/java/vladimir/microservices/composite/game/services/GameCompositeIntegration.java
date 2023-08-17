@@ -10,8 +10,6 @@ import java.time.LocalDateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.actuate.health.Health;
 import org.springframework.cloud.stream.annotation.EnableBinding;
 import org.springframework.cloud.stream.annotation.Output;
 import org.springframework.messaging.MessageChannel;
@@ -43,13 +41,14 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 
 	private static final Logger LOG = LoggerFactory.getLogger(GameCompositeIntegration.class);
 
-	private final WebClient webClient;
+	private final WebClient.Builder webClientBuilder;
+	private WebClient webClient;
 	private final ObjectMapper mapper;
 
-	private final String gameServiceUrl;
-	private final String reviewServiceUrl;
-	private final String dlcServiceUrl;
-	private final String eventServiceUrl;
+	private final String gameServiceUrl = "http://game";
+	private final String reviewServiceUrl = "http://review";
+	private final String dlcServiceUrl = "http://dlc";
+	private final String eventServiceUrl = "http://game-event";
 	
 	private MessageSources messageSources;
 	
@@ -75,27 +74,11 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	}
 
 	@Autowired
-	public GameCompositeIntegration(WebClient.Builder webClient, ObjectMapper mapper, MessageSources messageSources,
-			@Value("${app.game-service.host}") String gameServiceHost,
-			@Value("${app.game-service.port}") int gameServicePort,
+	public GameCompositeIntegration(WebClient.Builder builder, ObjectMapper mapper, MessageSources messageSources) {
 
-			@Value("${app.dlc-service.host}") String dlcServiceHost,
-			@Value("${app.dlc-service.port}") int dlcServicePort,
-
-			@Value("${app.review-service.host}") String reviewServiceHost,
-			@Value("${app.review-service.port}") int reviewServicePort,
-
-			@Value("${app.game-event-service.host}") String eventServiceHost,
-			@Value("${app.game-event-service.port}") int eventServicePort) {
-
-		this.webClient = webClient.build();
+		this.webClientBuilder = builder;
 		this.mapper = mapper;
 		this.messageSources = messageSources;
-
-		gameServiceUrl = "http://" + gameServiceHost + ":" + gameServicePort + "/game";
-		dlcServiceUrl = "http://" + dlcServiceHost + ":" + dlcServicePort + "/dlc";
-		reviewServiceUrl = "http://" + reviewServiceHost + ":" + reviewServicePort + "/review";
-		eventServiceUrl = "http://" + eventServiceHost + ":" + eventServicePort + "/event";
 
 	}
 
@@ -105,7 +88,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		String url = gameServiceUrl + "/" + gameId;
 		LOG.debug("Will call getGame API on URL: {}", url);
 
-		return webClient.get().uri(url).retrieve().bodyToMono(Game.class).log()
+		return getWebClient().get().uri(url).retrieve().bodyToMono(Game.class).log()
 				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex));
 
 	}
@@ -115,7 +98,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		
 			String url = reviewServiceUrl + "/" + gameId;
 			LOG.debug("Will call getReviews API on URL: {}", url);
-			return webClient.get().uri(url).retrieve().bodyToFlux(Review.class).log().onErrorResume(error -> empty());
+			return getWebClient().get().uri(url).retrieve().bodyToFlux(Review.class).log().onErrorResume(error -> empty());
 
 	}
 
@@ -123,7 +106,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	public Flux<Dlc> getDlcs(int gameId) {
 		String url = dlcServiceUrl + "/" + gameId;
 		LOG.debug("Will call getDlcs API on URL: {}", url);
-		return webClient.get().uri(url).retrieve().bodyToFlux(Dlc.class).log().onErrorResume(error -> empty());
+		return getWebClient().get().uri(url).retrieve().bodyToFlux(Dlc.class).log().onErrorResume(error -> empty());
 
 	}
 
@@ -132,7 +115,7 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 		
 			String url = eventServiceUrl + "/" + gameId;
 			LOG.debug("Will call getEvents API on URL: {}", url);
-			return webClient.get().uri(url).retrieve().bodyToFlux(GameEvent.class).log().onErrorResume(error -> empty());
+			return getWebClient().get().uri(url).retrieve().bodyToFlux(GameEvent.class).log().onErrorResume(error -> empty());
 
 	}
 
@@ -189,33 +172,6 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 				withPayload(new Event<Integer,GameEvent>(DELETE, gameId, null, LocalDateTime.now())).build());
 
 	}
-	
-	//Health checking methods
-	
-	public Mono<Health> getGameHealth() {
-        return getHealth(gameServiceUrl);
-    }
-
-    public Mono<Health> getDlcHealth() {
-        return getHealth(dlcServiceUrl);
-    }
-
-    public Mono<Health> getReviewHealth() {
-        return getHealth(reviewServiceUrl);
-    }
-    
-    public Mono<Health> getGameEventHealth() {
-        return getHealth(eventServiceUrl);
-    }
-
-    private Mono<Health> getHealth(String url) {
-        url += "/actuator/health";
-        LOG.debug("Will call the Health API on URL: {}", url);
-        return webClient.get().uri(url).retrieve().bodyToMono(String.class)
-            .map(s -> new Health.Builder().up().build())
-            .onErrorResume(ex -> Mono.just(new Health.Builder().down(ex).build()))
-            .log();
-    }
 
 	// Error handling methods
 	private String getErrorMessage(WebClientResponseException ex) {
@@ -248,6 +204,13 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
             LOG.warn("Error body: {}", wcre.getResponseBodyAsString());
             return ex;
         }
+	}
+	
+	public WebClient getWebClient() {
+		if(webClient==null) {
+			webClient = webClientBuilder.build();
+		}
+		return webClient;
 	}
 
 }

@@ -30,7 +30,7 @@ import vladimir.microservices.composite.game.services.GameCompositeIntegration;
 import vladimir.util.exceptions.InvalidInputException;
 import vladimir.util.exceptions.NotFoundException;
 
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT, properties= {"eureka.client.enabled=false"})
 @AutoConfigureWebTestClient
 class GameCompositeServiceApplicationTests {
 
