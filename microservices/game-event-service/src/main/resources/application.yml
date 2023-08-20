@@ -2,7 +2,7 @@ server.port: 7004
 server.error.include-message: always
 spring:
   application:
-    name: game-event-service
+    name: game-event
 
 spring.data.mongodb:
   host: localhost

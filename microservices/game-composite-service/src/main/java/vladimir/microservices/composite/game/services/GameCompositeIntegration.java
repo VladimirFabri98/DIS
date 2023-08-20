@@ -45,6 +45,8 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	private WebClient webClient;
 	private final ObjectMapper mapper;
 
+	
+	//Ove vrednosti treba da se poklapaju sa nazivima kontejnera u docker-compose fajlu
 	private final String gameServiceUrl = "http://game";
 	private final String reviewServiceUrl = "http://review";
 	private final String dlcServiceUrl = "http://dlc";
@@ -85,11 +87,11 @@ public class GameCompositeIntegration implements GameService, ReviewService, Dlc
 	@Override
 	public Mono<Game> getGame(int gameId) {
 
+		//http://game/1 ?????
 		String url = gameServiceUrl + "/" + gameId;
 		LOG.debug("Will call getGame API on URL: {}", url);
 
-		return getWebClient().get().uri(url).retrieve().bodyToMono(Game.class).log()
-				.onErrorMap(WebClientResponseException.class, ex -> handleException(ex));
+		return getWebClient().get().uri(url).retrieve().bodyToMono(Game.class).log();
 
 	}
 

@@ -3,7 +3,7 @@ server.error.include-message: always
 
 spring:
   application:
-    name: dlc-service
+    name: dlc
 
 spring.data.mongodb:
   host: localhost

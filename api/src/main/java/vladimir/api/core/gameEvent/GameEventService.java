@@ -10,12 +10,12 @@ import reactor.core.publisher.Flux;
 
 public interface GameEventService {
 
-	@GetMapping("event/{gameId}")
+	@GetMapping("game-event/{gameId}")
 	Flux<GameEvent> getEvents(@PathVariable int gameId);
 	
-	@PostMapping(value = "/event-post" , consumes = "application/json")
+	@PostMapping(value = "/game-event-post" , consumes = "application/json")
 	GameEvent createEvent(@RequestBody GameEvent body);
 	
-	@DeleteMapping("event/{gameId}")
+	@DeleteMapping("game-event/{gameId}")
 	void deleteEvents(@PathVariable int gameId);
 }

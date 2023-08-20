@@ -5,7 +5,7 @@ plugins {
 
 apply plugin: 'io.spring.dependency-management'
 
-group = 'vladimir.discovery-service'
+group = 'vladimir'
 version = '1.0.0-SNAPSHOT'
 sourceCompatibility = '1.8'
 
@@ -21,6 +21,7 @@ dependencies {
 	implementation 'org.springframework.cloud:spring-cloud-starter-netflix-eureka-server'
 	implementation 'org.glassfish.jaxb:jaxb-runtime'
 	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	
 }
 
 dependencyManagement {

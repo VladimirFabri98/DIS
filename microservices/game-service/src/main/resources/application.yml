@@ -2,7 +2,7 @@ server.port: 7001
 server.error.include-message: always
 spring:
   application:
-    name: game-service
+    name: game
 
 spring.data.mongodb:
   host: localhost
@@ -12,7 +12,7 @@ spring.data.mongodb:
 eureka:
   client:
     serviceUrl:
-      defaultZone: http://localhost:8761/eureka/
+      defaultZone: http://localhost:8761
     initialInstanceInfoReplicationIntervalSeconds: 5
     registryFetchIntervalSeconds: 5
   instance:

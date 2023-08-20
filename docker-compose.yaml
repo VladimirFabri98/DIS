@@ -52,12 +52,17 @@ services:
     environment:
       - SPRING_PROFILES_ACTIVE=docker
     depends_on:
-      rabbitmq:
-        condition: service_healthy
-
+      - game
+      - review
+      - dlc
+      - game-event
+      - rabbitmq
+      
   eureka:
     build: eureka-server
     mem_limit: 350m
+    ports:
+      - "8761:8761"
 
   gateway:
     environment:

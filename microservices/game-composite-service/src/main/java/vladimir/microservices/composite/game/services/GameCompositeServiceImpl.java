@@ -42,8 +42,9 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 				integration.getReviews(gameCompositeId).collectList(),
 				integration.getDlcs(gameCompositeId).collectList(),
 				integration.getEvents(gameCompositeId).collectList())
-		.doOnError(ex -> LOG.warn("getCompositeMeal failed: {}", ex.toString()))
+		.doOnError(ex -> LOG.warn("getCompositeGame failed: {}", ex.toString()))
 		.log();
+		
 	}
 
 	private GameAggregate createGameAggregate(Game game, List<Review> reviews, List<Dlc> dlcs, List<GameEvent> events,

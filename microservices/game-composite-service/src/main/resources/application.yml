@@ -62,7 +62,7 @@ server.port: 7000
 server.error.include-message: always
 spring:
   application:
-    name: game-composite-service
+    name: game-composite
 
 eureka:
   client:

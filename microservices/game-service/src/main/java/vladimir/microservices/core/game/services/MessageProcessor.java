@@ -35,7 +35,8 @@ public class MessageProcessor {
         case CREATE:
             Game game = event.getData();
             LOG.info("Create game with ID: {}", game.getGameId());
-            gameService.createGame(game);
+            Game savedGame = gameService.createGame(game);
+            LOG.info("Saved game:" + savedGame.getName() + ", " + savedGame.getProducer() + ", " + savedGame.getReleaseYear());
             break;
 
         case DELETE:
