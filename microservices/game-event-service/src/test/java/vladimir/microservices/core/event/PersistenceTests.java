@@ -19,7 +19,7 @@ import vladimir.microservices.core.event.persistence.GameEventEntity;
 import vladimir.microservices.core.event.persistence.GameEventRepository;
 
 
-@DataMongoTest
+@DataMongoTest(properties = {"spring.cloud.config.enabled=false"})
 public class PersistenceTests {
 
 	@Autowired

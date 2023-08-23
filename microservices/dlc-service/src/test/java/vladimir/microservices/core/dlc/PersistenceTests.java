@@ -16,7 +16,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import vladimir.microservices.core.dlc.persistence.DlcEntity;
 import vladimir.microservices.core.dlc.persistence.DlcRepository;
 
-@DataMongoTest
+@DataMongoTest(properties = {"spring.cloud.config.enabled=false"})
 public class PersistenceTests {
 
 	@Autowired

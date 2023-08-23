@@ -16,7 +16,7 @@ import org.springframework.dao.OptimisticLockingFailureException;
 import vladimir.microservices.core.review.persistence.ReviewEntity;
 import vladimir.microservices.core.review.persistence.ReviewRepository;
 
-@DataMongoTest
+@DataMongoTest(properties = {"spring.cloud.config.enabled=false"})
 public class PersistenceTests {
 
 	@Autowired

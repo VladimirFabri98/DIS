@@ -24,7 +24,8 @@ import vladimir.api.event.Event;
 import vladimir.microservices.core.dlc.persistence.DlcRepository;
 import vladimir.util.exceptions.InvalidInputException;
 
-@SpringBootTest(webEnvironment = RANDOM_PORT, properties = {"spring.data.mongodb.port: 0", "eureka.client.enabled=false"})
+@SpringBootTest(webEnvironment = RANDOM_PORT, properties = 
+{"spring.data.mongodb.port: 0", "eureka.client.enabled=false", "spring.cloud.config.enabled=false"})
 @AutoConfigureWebTestClient
 class DlcServiceApplicationTests {
 
