@@ -5,6 +5,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -23,7 +24,9 @@ public interface GameCompositeService {
 	        @ApiResponse(code = 422, message = "Unprocessable entity, input parameters caused the processing to fails. See response message for more information.")
 	    })
 	@GetMapping("game-composite/{gameCompositeId}")
-	Mono<GameAggregate> getCompositeGame(@PathVariable int gameCompositeId);
+	Mono<GameAggregate> getCompositeGame(@PathVariable int gameCompositeId,
+			@RequestParam(value = "delay", required = false, defaultValue = "0") int delay,
+			@RequestParam(value="faultPercent", required =false, defaultValue="0") int faultPercent);
 	
 	
 	 @ApiOperation(

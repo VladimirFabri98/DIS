@@ -103,6 +103,33 @@ spring.cloud.stream:
         required-groups:
           auditGroup
 
+
+app.game-service.timeoutSec: 2
+
+resilience4j.retry:
+  backends:
+    game:
+      maxRetryAttempts: 3
+      waitDuration: 1000
+      retryExceptions:
+      - org.springframework.web.reactive.function.client.WebClientResponseException$InternalServerError
+
+management.health.circuitbreakers.enabled: true
+
+resilience4j.circuitbreaker:
+  backends:
+    game:
+      registerHealthIndicator: true
+      ringBufferSizeInClosedState: 5
+      failureRateThreshold: 50
+      waitDurationInOpenState: 10000
+      ringBufferSizeInHalfOpenState: 3
+      automaticTransitionFromOpenToHalfOpenEnabled: true
+      ignoreExceptions:
+        - vladimir.util.exceptions.InvalidInputException
+        - vladimir.util.exceptions.NotFoundException
+
+
 spring.cloud.stream.kafka.binder:
   brokers: 127.0.0.1
   defaultBrokerPort: 9092

@@ -6,7 +6,11 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.integration.handler.advice.RequestHandlerCircuitBreakerAdvice.CircuitBreakerOpenException;
 import org.springframework.web.bind.annotation.RestController;
+
+import io.github.resilience4j.circuitbreaker.CallNotPermittedException;
+import io.github.resilience4j.reactor.retry.RetryOperator;
 
 import reactor.core.publisher.Mono;
 import vladimir.api.composite.game.DlcSummary;
@@ -35,10 +39,11 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 	}
 
 	@Override
-	public Mono<GameAggregate> getCompositeGame(int gameCompositeId) {
+	public Mono<GameAggregate> getCompositeGame(int gameCompositeId, int delay, int faultPercent) {
 		return Mono.zip(
 				values -> createGameAggregate((Game) values[0], (List<Review>) values[1], (List<Dlc>) values[2],(List<GameEvent>) values[3], serviceUtil.getServiceAddress()),
-				integration.getGame(gameCompositeId),
+				integration.getGame(gameCompositeId, delay, faultPercent)
+				.onErrorReturn(CallNotPermittedException.class, getGameFallbackValue(gameCompositeId)),
 				integration.getReviews(gameCompositeId).collectList(),
 				integration.getDlcs(gameCompositeId).collectList(),
 				integration.getEvents(gameCompositeId).collectList())
@@ -119,5 +124,12 @@ public class GameCompositeServiceImpl implements GameCompositeService {
 		integration.deleteDlcs(gameId);
 		integration.deleteEvents(gameId);
 	}
+	
+	private Game getGameFallbackValue(int gameId) {
+
+        LOG.warn("Creating a fallback game for gameId = {}", gameId);
+
+        return new Game(gameId,"name","producer",1961,serviceUtil.getServiceAddress());
+    }
 
 }

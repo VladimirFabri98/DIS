@@ -47,7 +47,7 @@ class GameCompositeServiceApplicationTests {
 	@BeforeEach
 	public void setUp() {
 
-		when(compositeIntegration.getGame(GAME_ID_OK)).
+		when(compositeIntegration.getGame(GAME_ID_OK,0,0)).
 			thenReturn(just(new Game(GAME_ID_OK, "name","producer",2015, "mock-address")));
 		when(compositeIntegration.getReviews(GAME_ID_OK)).
 		thenReturn(Flux.fromIterable(Collections.singletonList(new Review(1,GAME_ID_OK,5,"mock-address"))));
@@ -58,9 +58,9 @@ class GameCompositeServiceApplicationTests {
 				new Date(System.currentTimeMillis()),"mock-addres"))));
 		
 
-		when(compositeIntegration.getGame(GAME_ID_NOT_FOUND)).thenThrow(new NotFoundException("NOT FOUND: " + GAME_ID_NOT_FOUND));
+		when(compositeIntegration.getGame(GAME_ID_NOT_FOUND,0,0)).thenThrow(new NotFoundException("NOT FOUND: " + GAME_ID_NOT_FOUND));
 
-		when(compositeIntegration.getGame(GAME_ID_INVALID)).thenThrow(new InvalidInputException("INVALID: " + GAME_ID_INVALID));
+		when(compositeIntegration.getGame(GAME_ID_INVALID,0,0)).thenThrow(new InvalidInputException("INVALID: " + GAME_ID_INVALID));
 	}
 
 	@Test

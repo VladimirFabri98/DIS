@@ -2,6 +2,8 @@ package vladimir.microservices.core.game.services;
 
 import static reactor.core.publisher.Mono.error;
 
+import java.util.Random;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,15 +35,44 @@ public class GameServiceImpl implements GameService {
 	}
 	
 	@Override
-	public Mono<Game> getGame(int gameId) {
+	public Mono<Game> getGame(int gameId, int delay, int faultPercent) {
 		if (gameId < 1) throw new InvalidInputException("Invalid gameId: " + gameId);
-
+		if(delay > 0) simulateDelay(delay);
+		if(faultPercent > 0) throwErrorIfBadLuck(faultPercent);
+		
         return repository.findByGameId(gameId)
             .switchIfEmpty(error(new NotFoundException("No game found for gameId: " + gameId)))
             .log()
             .map(e -> mapper.entityToApi(e))
             .map(e -> {e.setServiceAddress(serviceUtil.getServiceAddress()); return e;});
 	}
+	
+	//CIRCUIT BREAKER HELPER METHODS
+	private void simulateDelay(int delay) {
+        LOG.debug("Sleeping for {} seconds...", delay);
+        try {Thread.sleep(delay * 1000);} catch (InterruptedException e) {}
+        LOG.debug("Moving on...");
+    }
+
+    private void throwErrorIfBadLuck(int faultPercent) {
+        int randomThreshold = getRandomNumber(1, 100);
+        if (faultPercent < randomThreshold) {
+            LOG.debug("We got lucky, no error occurred, {} < {}", faultPercent, randomThreshold);
+        } else {
+            LOG.debug("Bad luck, an error occurred, {} >= {}", faultPercent, randomThreshold);
+            throw new RuntimeException("Something went wrong...");
+        }
+    }
+
+    private final Random randomNumberGenerator = new Random();
+    private int getRandomNumber(int min, int max) {
+
+        if (max < min) {
+            throw new RuntimeException("Max must be greater than min");
+        }
+
+        return randomNumberGenerator.nextInt((max - min) + 1) + min;
+    }
 
 	@Override
 	public Game createGame(Game body) {
