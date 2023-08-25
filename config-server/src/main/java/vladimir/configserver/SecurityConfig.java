@@ -1,4 +1,4 @@
-package se.magnus.springcloud.configserver;
+package vladimir.configserver;
 
 
 import org.springframework.beans.factory.annotation.Autowired;

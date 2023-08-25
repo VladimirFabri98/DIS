@@ -1,4 +1,4 @@
-package se.magnus.springcloud.configserver;
+package vladimir.configserver;
 
 import org.junit.Test;
 import org.junit.runner.RunWith;
