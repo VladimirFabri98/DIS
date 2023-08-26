@@ -29,7 +29,7 @@ The image below shows the class diagram used in the project.
 
 ![](diagrams/class-diagram.png "Class diagram")
 
-The architecture of microservices used during the development of the project is shown in the picture. All core microservices contain a persistence layer through which communication with the corresponding databases is performed.
+The architecture of microservices used during the development of the project is shown in the following picture. All core microservices contain a persistence layer through which communication with the corresponding databases is performed. Composite microservice contains an integration component which unifies all microservices.
 
 ![](diagrams/layers-diagram.png)
 
@@ -53,7 +53,7 @@ Spring Cloud is used to implement the following design patterns:
 | Design pattern            | Spring Cloud Component                         | Description                                                                                                                                                                                          |
 |---------------------------|------------------------------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 | Service discovery         | Netflix Eureka and Spring Cloud load balancer  | Service Discovery service keeps track of currently avaiable microservices and IP addresses of its instances.                                                                                         |
-| Edge server               | Spring Cloud Gateway and Spring Security OAuth | Edge server is used to secure a microservice landscape, that is to hide private services from external usage and to protect public services.                                                         |
+| Edge server               | Spring Cloud Gateway                           | Edge server is used to secure a microservice landscape, that is to hide private services from external usage and to protect public services.                                                         |
 | Centralized configuration | Spring Cloud Configuration Server              | Centralized configuration provides the centralized management of configuration files. Also, encription of sensitive information in configuration files is supported with Spring Cloud Config.        |
 | Circuit breaker           | Resilience4j                                   | Circuit breaker, together with retry mechanism, is used to prevent a chain od failure reactions if a remote service stops to respod and to handle random errors that might happen from time to time. |
 | Distributed tracing       | Spring Cloud Sleuth and Zipkin                 | Distributed tracing is user to track and visualize how requests and messages flow between microservices when processiing an external call to the system landscape.                                   |
